@@ -331,6 +331,48 @@
       transform: none;
     }
 
+    .promo-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .promo-row input {
+      flex: 1;
+      padding: 11px 16px;
+      border: 1.5px solid #d0dce8;
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      color: #1a2e4a;
+      background: #fafcff;
+    }
+
+    .promo-row button {
+      padding: 11px 20px;
+      background: #3a6a9a;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .promo-row button:hover { background: #2a5a8a; }
+
+    .promo-msg {
+      font-size: 13px;
+      margin-top: -6px;
+      margin-bottom: 10px;
+      min-height: 18px;
+    }
+
+    .promo-msg.success { color: #1a6620; }
+    .promo-msg.error   { color: #a03030; }
+
     .submit-note {
       text-align: center;
       font-size: 12px;
@@ -613,11 +655,18 @@
       </div>
     </div>
 
+    <!-- Discount Code -->
+    <div class="promo-row">
+      <input type="text" id="promo-code" placeholder="Have a discount code?">
+      <button type="button" onclick="applyPromo()">Apply</button>
+    </div>
+    <div class="promo-msg" id="promo-msg"></div>
+
     <!-- Submit -->
     <button class="submit-btn" id="submit-btn" onclick="handleSubmit()">
       &#x1F512;&ensp;Pay $5 &amp; Schedule Appointments
     </button>
-    <p class="submit-note">Secured by Stripe &middot; You'll be redirected to complete payment</p>
+    <p class="submit-note" id="submit-note">Secured by Stripe &middot; You'll be redirected to complete payment</p>
 
   </div>
 
@@ -660,6 +709,7 @@
   let appointments = [{ name: '', specialty: '', phone: '', timeline: '', timelineCustom: '' }];
   let activeCalls = [];
   let completedCount = 0;
+  let promoApplied = false;
 
   // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ RENDER APPOINTMENT ENTRIES ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
   function renderAppointments() {
@@ -700,9 +750,9 @@
             <select oninput="appointments[${i}].timeline = this.value">
               <option value="">No preference</option>
               <option value="as soon as possible" ${appt.timeline==='as soon as possible'?'selected':''}>As soon as possible</option>
-              <option value="within 1-2 weeks" ${appt.timeline==='within 1-2 weeks'?'selected':''}>Within 1â2 weeks</option>
+              <option value="within 1-2 weeks" ${appt.timeline==='within 1-2 weeks'?'selected':''}>Within 1-2 weeks</option>
               <option value="within 1 month" ${appt.timeline==='within 1 month'?'selected':''}>Within 1 month</option>
-              <option value="within 2-3 months" ${appt.timeline==='within 2-3 months'?'selected':''}>Within 2â3 months</option>
+              <option value="within 2-3 months" ${appt.timeline==='within 2-3 months'?'selected':''}>Within 2-3 months</option>
               <option value="within 6 months" ${appt.timeline==='within 6 months'?'selected':''}>Within 6 months</option>
               <option value="custom" ${appt.timeline==='custom'?'selected':''}>Custom (specify below)</option>
             </select>
@@ -791,11 +841,41 @@
       appointments: appointments.filter(a => a.name.trim()).map(a => ({...a, timeline: a.timeline === 'custom' ? (a.timelineCustom || 'custom') : (a.timeline || '')}))
     };
 
-    // Save to localStorage before Stripe redirect
-    localStorage.setItem('doccaller_data', JSON.stringify(formData));
+    if (promoApplied) {
+      // Bypass Stripe — go directly to call flow
+      document.getElementById('form-section').style.display = 'none';
+      document.getElementById('status-section').style.display = 'block';
+      formData.appointments.forEach(function(appt, i) {
+        renderCallItem(i, appt.name, appt.phone, 'calling');
+      });
+      startCalls(formData);
+    } else {
+      // Save to localStorage before Stripe redirect
+      localStorage.setItem('doccaller_data', JSON.stringify(formData));
+      // Redirect to Stripe payment link
+      window.location.href = 'https://buy.stripe.com/bJe4gA0Cufnv9Wm32E7N601';
+    }
+  }
 
-    // Redirect to Stripe payment link
-    window.location.href = 'https://buy.stripe.com/bJe4gA0Cufnv9Wm32E7N601';
+  // Promo code
+  function applyPromo() {
+    const code = document.getElementById('promo-code').value.trim();
+    const msg  = document.getElementById('promo-msg');
+    const btn  = document.getElementById('submit-btn');
+    const note = document.getElementById('submit-note');
+    if (code === 'ovaisinamullah') {
+      promoApplied = true;
+      msg.className = 'promo-msg success';
+      msg.textContent = '\u2713 Discount applied \u2014 payment skipped.';
+      btn.innerHTML = '&#x1F50D;&ensp;Schedule Appointments (Free)';
+      note.style.display = 'none';
+    } else {
+      promoApplied = false;
+      msg.className = 'promo-msg error';
+      msg.textContent = 'Invalid code. Please try again.';
+      btn.innerHTML = '&#x1F512;&ensp;Pay $5 &amp; Schedule Appointments';
+      note.style.display = '';
+    }
   }
 
   // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ ON PAGE LOAD ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
