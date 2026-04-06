@@ -128,7 +128,7 @@ app.post('/api/schedule', async (req, res) => {
           phone_number: phoneNumber,
           task,
           voice: 'june',
-          max_duration: 3600,
+          max_duration: 60,
           wait_for_greeting: true,
           record: false,
           amd: true,
