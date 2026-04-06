@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DocCaller — AI Medical Appointment Scheduler</title>
+  <title>DocCaller â AI Medical Appointment Scheduler</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* ─── RESET & BASE ─────────────────────────────────── */
+    /* âââ RESET & BASE âââââââââââââââââââââââââââââââââââ */
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
@@ -18,7 +18,7 @@
       line-height: 1.5;
     }
 
-    /* ─── HEADER ───────────────────────────────────────── */
+    /* âââ HEADER âââââââââââââââââââââââââââââââââââââââââ */
     header {
       background: linear-gradient(135deg, #1a3a5c 0%, #254d80 100%);
       padding: 18px 40px;
@@ -60,14 +60,14 @@
       letter-spacing: 0.3px;
     }
 
-    /* ─── LAYOUT ───────────────────────────────────────── */
+    /* âââ LAYOUT âââââââââââââââââââââââââââââââââââââââââ */
     .container {
       max-width: 740px;
       margin: 32px auto 60px;
       padding: 0 20px;
     }
 
-    /* ─── INFO BANNER ──────────────────────────────────── */
+    /* âââ INFO BANNER ââââââââââââââââââââââââââââââââââââ */
     .info-banner {
       background: white;
       border: 1px solid #d0e4f7;
@@ -92,7 +92,7 @@
       font-size: 13px;
     }
 
-    /* ─── CARDS ─────────────────────────────────────────── */
+    /* âââ CARDS âââââââââââââââââââââââââââââââââââââââââââ */
     .card {
       background: white;
       border-radius: 12px;
@@ -131,7 +131,7 @@
       margin-left: auto;
     }
 
-    /* ─── FORM ─────────────────────────────────────────── */
+    /* âââ FORM âââââââââââââââââââââââââââââââââââââââââââ */
     .form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -178,7 +178,7 @@
 
     input::placeholder { color: #b0c4d8; }
 
-    /* ─── APPOINTMENT ENTRIES ──────────────────────────── */
+    /* âââ APPOINTMENT ENTRIES ââââââââââââââââââââââââââââ */
     .appointment-entry {
       background: #f7faff;
       border: 1.5px solid #d0e4f7;
@@ -233,7 +233,7 @@
       background: #eef6ff;
     }
 
-    /* ─── CONSENT ──────────────────────────────────────── */
+    /* âââ CONSENT ââââââââââââââââââââââââââââââââââââââââ */
     .consent-box {
       background: #fffbf0;
       border: 1.5px solid #e8d490;
@@ -262,7 +262,7 @@
 
     .consent-text strong { color: #3a3010; }
 
-    /* ─── SUBMIT BUTTON ────────────────────────────────── */
+    /* âââ SUBMIT BUTTON ââââââââââââââââââââââââââââââââââ */
     .submit-btn {
       width: 100%;
       padding: 16px;
@@ -302,7 +302,7 @@
       margin-top: 10px;
     }
 
-    /* ─── STATUS SECTION ───────────────────────────────── */
+    /* âââ STATUS SECTION âââââââââââââââââââââââââââââââââ */
     .status-section { display: none; }
 
     .status-banner {
@@ -342,7 +342,7 @@
       margin-top: 2px;
     }
 
-    /* ─── CALL STATUS LIST ─────────────────────────────── */
+    /* âââ CALL STATUS LIST âââââââââââââââââââââââââââââââ */
     .call-status-list {
       list-style: none;
     }
@@ -405,7 +405,7 @@
     .badge-failed { background: #fde8e8; color: #a03030; }
     .badge-voicemail { background: #e8e0f5; color: #5a3a8a; }
 
-    /* ─── RESULTS ──────────────────────────────────────── */
+    /* âââ RESULTS ââââââââââââââââââââââââââââââââââââââââ */
     .results-card {
       background: linear-gradient(135deg, #f0fff4 0%, #e8fdf0 100%);
       border: 1.5px solid #68d391;
@@ -451,7 +451,7 @@
     .result-success { color: #1a6620; }
     .result-fail { color: #a03030; }
 
-    /* ─── ERROR DISPLAY ────────────────────────────────── */
+    /* âââ ERROR DISPLAY ââââââââââââââââââââââââââââââââââ */
     .error-banner {
       background: #fde8e8;
       border: 1.5px solid #e8a0a0;
@@ -463,7 +463,7 @@
       display: none;
     }
 
-    /* ─── FOOTER ───────────────────────────────────────── */
+    /* âââ FOOTER âââââââââââââââââââââââââââââââââââââââââ */
     footer {
       text-align: center;
       padding: 30px 20px;
@@ -473,7 +473,7 @@
       margin-top: 20px;
     }
 
-    /* ─── RESPONSIVE ───────────────────────────────────── */
+    /* âââ RESPONSIVE âââââââââââââââââââââââââââââââââââââ */
     @media (max-width: 600px) {
       header { padding: 16px 20px; }
       .form-grid { grid-template-columns: 1fr; }
@@ -485,7 +485,7 @@
 </head>
 <body>
 
-<!-- ─── HEADER ────────────────────────────────────────── -->
+<!-- âââ HEADER ââââââââââââââââââââââââââââââââââââââââââ -->
 <header>
   <div class="logo">
     <div class="logo-icon">&#x2719;</div>
@@ -498,19 +498,19 @@
 
 <div class="container">
 
-  <!-- ─── INFO BANNER ──────────────────────────────────── -->
+  <!-- âââ INFO BANNER ââââââââââââââââââââââââââââââââââââ -->
   <div class="info-banner">
     <strong>How DocCaller works:</strong> Enter the patient's information and up to 3 doctor or clinic phone numbers. Our AI agent will call each office, speak with the scheduler, provide the necessary information, and book appointments &mdash; all automatically.
     <br><br>
     <strong>Why we charge <span class="price-badge">$5.00 per session</span>:</strong> Each call is made by an AI phone agent that we pay for per minute of call time. The $5 fee covers up to 3 appointment calls or 60 minutes of total call time. This fee goes directly toward those costs.
   </div>
 
-  <!-- ─── ERROR BANNER ─────────────────────────────────── -->
+  <!-- âââ ERROR BANNER âââââââââââââââââââââââââââââââââââ -->
   <div class="error-banner" id="error-banner"></div>
 
-  <!-- ══════════════════════════════════════════════════════
+  <!-- ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
        FORM SECTION
-       ══════════════════════════════════════════════════════ -->
+       ââââââââââââââââââââââââââââââââââââââââââââââââââââââ -->
   <div id="form-section">
 
     <!-- Patient Info -->
@@ -582,9 +582,9 @@
 
   </div>
 
-  <!-- ══════════════════════════════════════════════════════
+  <!-- ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
        STATUS SECTION (shown after payment)
-       ══════════════════════════════════════════════════════ -->
+       ââââââââââââââââââââââââââââââââââââââââââââââââââââââ -->
   <div id="status-section" class="status-section">
 
     <div class="status-banner" id="status-banner">
@@ -613,16 +613,16 @@
   Patient information is not stored and is only used during the scheduling call.
 </footer>
 
-<!-- ══════════════════════════════════════════════════════════
+<!-- ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
      JAVASCRIPT
-     ══════════════════════════════════════════════════════════ -->
+     ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ -->
 <script>
-  // ─── STATE ──────────────────────────────────────────────
+  // âââ STATE ââââââââââââââââââââââââââââââââââââââââââââââ
   let appointments = [{ name: '', specialty: '', phone: '' }];
   let activeCalls = [];
   let completedCount = 0;
 
-  // ─── RENDER APPOINTMENT ENTRIES ─────────────────────────
+  // âââ RENDER APPOINTMENT ENTRIES âââââââââââââââââââââââââ
   function renderAppointments() {
     const container = document.getElementById('appt-container');
     container.innerHTML = '';
@@ -683,7 +683,7 @@
     return div.innerHTML;
   }
 
-  // ─── FORM VALIDATION ───────────────────────────────────
+  // âââ FORM VALIDATION âââââââââââââââââââââââââââââââââââ
   function validateForm() {
     const fields = {
       'Full Name': document.getElementById('p-name').value.trim(),
@@ -715,7 +715,7 @@
     return true;
   }
 
-  // ─── SUBMIT → STRIPE ───────────────────────────────────
+  // âââ SUBMIT â STRIPE âââââââââââââââââââââââââââââââââââ
   function handleSubmit() {
     if (!validateForm()) return;
 
@@ -737,10 +737,10 @@
     sessionStorage.setItem('doccaller_data', JSON.stringify(formData));
 
     // Redirect to Stripe payment link
-    window.location.href = 'https://buy.stripe.com/bJe6oI4SK4IRd8y9r27N600';
+    window.location.href = 'https://buy.stripe.com/bJe4gA0Cufnv9Wm32E7N601';
   }
 
-  // ─── ON PAGE LOAD ──────────────────────────────────────
+  // âââ ON PAGE LOAD ââââââââââââââââââââââââââââââââââââââ
   window.addEventListener('DOMContentLoaded', () => {
     renderAppointments();
 
@@ -770,7 +770,7 @@
     }
   });
 
-  // ─── START CALLS ───────────────────────────────────────
+  // âââ START CALLS âââââââââââââââââââââââââââââââââââââââ
   async function startCalls(formData) {
     try {
       const res = await fetch('/api/schedule', {
@@ -805,7 +805,7 @@
     }
   }
 
-  // ─── POLL CALL STATUS ─────────────────────────────────
+  // âââ POLL CALL STATUS âââââââââââââââââââââââââââââââââ
   function pollCall(callId, index) {
     let attempts = 0;
     const maxAttempts = 240; // 240 * 15s = 60 minutes
@@ -829,17 +829,17 @@
 
           if (wasVoicemail) {
             updateCallItem(index, 'voicemail',
-              `Reached voicemail — left a message.${callMin ? ' (' + callMin + ')' : ''}`);
+              `Reached voicemail â left a message.${callMin ? ' (' + callMin + ')' : ''}`);
           } else {
             updateCallItem(index, 'complete',
-              summary || 'Call completed — see transcript for details.' + (callMin ? ' (' + callMin + ')' : ''));
+              summary || 'Call completed â see transcript for details.' + (callMin ? ' (' + callMin + ')' : ''));
           }
 
           completedCount++;
           checkAllDone();
 
         } else if (data.status === 'failed' || data.status === 'error') {
-          updateCallItem(index, 'failed', 'Call failed — the office may not have answered.');
+          updateCallItem(index, 'failed', 'Call failed â the office may not have answered.');
           completedCount++;
           checkAllDone();
 
@@ -859,7 +859,7 @@
     setTimeout(check, 10000);
   }
 
-  // ─── RENDER CALL STATUS ITEMS ─────────────────────────
+  // âââ RENDER CALL STATUS ITEMS âââââââââââââââââââââââââ
   function renderCallItem(index, doctorName, phone, status) {
     const list = document.getElementById('call-list');
     const li = document.createElement('li');
@@ -902,7 +902,7 @@
     }
   }
 
-  // ─── CHECK IF ALL CALLS ARE DONE ──────────────────────
+  // âââ CHECK IF ALL CALLS ARE DONE ââââââââââââââââââââââ
   function checkAllDone() {
     if (completedCount >= activeCalls.length) {
       // Update banner
@@ -940,7 +940,7 @@
     }
   }
 
-  // ─── ERROR HELPERS ────────────────────────────────────
+  // âââ ERROR HELPERS ââââââââââââââââââââââââââââââââââââ
   function showError(msg) {
     const el = document.getElementById('error-banner');
     el.textContent = msg;
