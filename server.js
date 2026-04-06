@@ -7,11 +7,11 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ─── CONFIG ───────────────────────────────────────────────
+// âââ CONFIG âââââââââââââââââââââââââââââââââââââââââââââââ
 // Set BLAND_API_KEY in your Vercel environment variables
 const BLAND_API_KEY = process.env.BLAND_API_KEY;
 
-// ─── HELPERS ──────────────────────────────────────────────
+// âââ HELPERS ââââââââââââââââââââââââââââââââââââââââââââââ
 
 function normalizePhone(phone) {
   const digits = phone.replace(/\D/g, '');
@@ -28,19 +28,19 @@ PATIENT INFORMATION (provide these details when the office staff asks):
 - Date of Birth: ${patient.dob}
 - Home Address: ${patient.address}
 - Patient Phone Number: ${patient.phone}
-- Insurance Provider: ${patient.insurance}${patient.memberId ? '\n- Insurance Member ID: ' + patient.memberId : ''}${patient.groupNumber ? '\n- Insurance Group Number: ' + patient.groupNumber : ''}
+- Insurance Provider: ${patient.insurance}${patient.memberId ? '\n- Insurance Member ID: ' + patient.memberId : ''}${patient.groupNumber ? '\n- Insurance Group Number: ' + patient.groupNumber : ''}${patient.mrn ? '\n- Medical Record Number (MRN): ' + patient.mrn : ''}
 
 YOU ARE CALLING: ${appt.name}${appt.specialty ? ' (' + appt.specialty + ')' : ''}
 
 YOUR INSTRUCTIONS:
 1. When someone answers, greet them warmly and say: "Hi, I'm calling to schedule an appointment on behalf of ${patient.name}."
 2. If asked who you are, say you are a scheduling assistant helping the patient.
-3. Provide the patient's information clearly when requested — name, date of birth, address, phone, and insurance details.
+3. Provide the patient's information clearly when requested â name, date of birth, address, phone, and insurance details.
 4. Request the earliest available appointment.
 5. Confirm the exact date, time, and office location of the appointment.
 6. Ask if there are any forms to complete in advance or anything the patient should bring to the visit.
 7. Thank the staff and clearly confirm the final appointment details before ending the call.
-8. Be patient if put on hold — wait quietly.
+8. Be patient if put on hold â wait quietly.
 9. If you reach a phone menu, navigate it to reach the scheduling department.
 10. If you reach voicemail, leave a clear message: "Hello, I am calling to schedule an appointment for ${patient.name}. Please call back at ${patient.phone} to confirm the appointment. Thank you."
 
@@ -48,7 +48,7 @@ IMPORTANT: Do NOT claim to be the patient. You are calling ON BEHALF of the pati
 IMPORTANT: When the appointment is confirmed, clearly state the date, time, and location so it is captured in the transcript.`;
 }
 
-// ─── ROUTES ───────────────────────────────────────────────
+// âââ ROUTES âââââââââââââââââââââââââââââââââââââââââââââââ
 
 // Trigger Bland.ai calls for all appointments
 app.post('/api/schedule', async (req, res) => {
@@ -142,12 +142,12 @@ app.get('/api/call-status/:callId', async (req, res) => {
   }
 });
 
-// Catch-all — serve index.html
+// Catch-all â serve index.html
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ─── START ────────────────────────────────────────────────
+// âââ START ââââââââââââââââââââââââââââââââââââââââââââââââ
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`DocCaller running on port ${PORT}`);
