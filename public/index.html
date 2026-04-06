@@ -163,7 +163,8 @@
 
     input[type="text"],
     input[type="date"],
-    input[type="tel"] {
+    input[type="tel"],
+    input[type="email"] {
       padding: 10px 14px;
       border: 1.5px solid #d0dff0;
       border-radius: 8px;
@@ -574,7 +575,7 @@
 
   <!-- --- INFO BANNER ------------------------------------ -->
   <div class="info-banner">
-    <strong>How DocCaller works:</strong> Enter the patient's information and up to 3 doctor or clinic phone numbers. Our AI agent will call each office, speak with the scheduler, provide the necessary information, and book appointments &mdash; all automatically.
+    <strong>How DocCaller works:</strong> Enter the patient's information and up to 3 doctor or clinic phone numbers. Our AI agent will call each office, speak with the scheduler, provide the necessary information, and book appointments &mdash; all automatically. Once all calls are complete, a summary of your appointment results will be emailed to the address you provide.
     <br><br>
     <strong>Why we charge <span class="price-badge">$5.00 per session</span>:</strong> Each call is made by an AI phone agent that we pay for per minute of call time. The $5 fee covers up to 3 appointment calls or 60 minutes of total call time. This fee goes directly toward those costs.
   </div>
@@ -628,6 +629,11 @@
         <div class="form-group">
           <label for="p-mrn">Medical Record Number (MRN)</label>
           <input type="text" id="p-mrn" placeholder="Optional - if known">
+        </div>
+        <div class="form-group full-width">
+          <label for="p-email">Email Address *</label>
+          <input type="email" id="p-email" placeholder="patient@email.com">
+          <span style="font-size:12px;color:#5a7a9a;margin-top:2px;">Appointment results will be emailed to this address once all calls are complete.</span>
         </div>
       </div>
     </div>
@@ -710,6 +716,8 @@
   let activeCalls = [];
   let completedCount = 0;
   let promoApplied = false;
+  let patientEmail = '';
+  let patientName = '';
 
   // --- RENDER APPOINTMENT ENTRIES -------------------------
   function renderAppointments() {
@@ -797,7 +805,8 @@
       'Date of Birth': document.getElementById('p-dob').value,
       'Address': document.getElementById('p-address').value.trim(),
       'Phone': document.getElementById('p-phone').value.trim(),
-      'Insurance': document.getElementById('p-insurance').value.trim()
+      'Insurance': document.getElementById('p-insurance').value.trim(),
+      'Email Address': document.getElementById('p-email').value.trim()
     };
 
     for (const [label, val] of Object.entries(fields)) {
@@ -805,6 +814,13 @@
         showError(`Please fill in the patient's ${label}.`);
         return false;
       }
+    }
+
+    // Validate email format
+    const emailVal = document.getElementById('p-email').value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+      showError('Please enter a valid email address.');
+      return false;
     }
 
     const valid = appointments.filter(a => a.name.trim());
@@ -836,13 +852,16 @@
         insurance: document.getElementById('p-insurance').value.trim(),
         memberId: document.getElementById('p-member').value.trim(),
         groupNumber: document.getElementById('p-group').value.trim(),
-        mrn: document.getElementById('p-mrn').value.trim()
+        mrn: document.getElementById('p-mrn').value.trim(),
+        email: document.getElementById('p-email').value.trim()
       },
       appointments: appointments.filter(a => a.name.trim()).map(a => ({...a, timeline: a.timeline === 'custom' ? (a.timelineCustom || 'custom') : (a.timeline || '')}))
     };
 
     if (promoApplied) {
       // Bypass Stripe - go directly to call flow
+      patientEmail = formData.patient.email;
+      patientName = formData.patient.name;
       document.getElementById('form-section').style.display = 'none';
       document.getElementById('status-section').style.display = 'block';
       formData.appointments.forEach(function(appt, i) {
@@ -889,6 +908,10 @@
       if (savedData) {
         const formData = JSON.parse(savedData);
         localStorage.removeItem('doccaller_data');
+
+        // Save patient info for email
+        patientEmail = formData.patient.email;
+        patientName = formData.patient.name;
 
         // Clean URL
         window.history.replaceState({}, '', '/');
@@ -1096,6 +1119,39 @@
 
       resultsDiv.innerHTML = html;
       document.getElementById('results-section').style.display = 'block';
+
+      // Send results email
+      if (patientEmail) {
+        const emailResults = activeCalls.map((call, i) => {
+          const badge = document.getElementById(`call-badge-${i}`);
+          const result = document.getElementById(`call-result-${i}`);
+          const isComplete = badge && badge.classList.contains('badge-complete');
+          const isVoicemail = badge && badge.classList.contains('badge-voicemail');
+          return {
+            doctorName: call.doctorName,
+            phone: call.phone,
+            status: isComplete ? 'complete' : (isVoicemail ? 'voicemail' : 'failed'),
+            details: result ? result.textContent : 'No details available.'
+          };
+        });
+
+        fetch('/api/send-results', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: patientEmail,
+            patientName: patientName,
+            results: emailResults
+          })
+        }).then(r => r.json()).then(data => {
+          if (data.success) {
+            const emailNote = document.createElement('p');
+            emailNote.style.cssText = 'text-align:center;color:#2d6a4a;font-size:14px;margin-top:16px;font-weight:500;';
+            emailNote.textContent = 'Results have been emailed to ' + patientEmail;
+            document.querySelector('.results-card').appendChild(emailNote);
+          }
+        }).catch(() => {});
+      }
     }
   }
 

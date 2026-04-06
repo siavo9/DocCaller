@@ -1,6 +1,7 @@
 const express = require('express');
 const fetch = require('node-fetch');
 const path = require('path');
+const { Resend } = require('resend');
 
 const app = express();
 
@@ -8,8 +9,10 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ CONFIG Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
-// Set BLAND_API_KEY in your Vercel environment variables
+// Set BLAND_API_KEY and RESEND_API_KEY in your Vercel environment variables
 const BLAND_API_KEY = process.env.BLAND_API_KEY;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const resend = new Resend(RESEND_API_KEY);
 
 // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ HELPERS Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 
@@ -191,6 +194,85 @@ app.get('/api/call-status/:callId', async (req, res) => {
 });
 
 // Catch-all Ã¢ÂÂ serve index.html
+// Send results email via Resend
+app.post('/api/send-results', async (req, res) => {
+  try {
+    if (!RESEND_API_KEY) {
+      return res.status(500).json({ success: false, error: 'Email service not configured' });
+    }
+
+    const { email, patientName, results } = req.body;
+
+    if (!email || !results || !Array.isArray(results)) {
+      return res.status(400).json({ success: false, error: 'Missing required fields' });
+    }
+
+    // Build the email HTML
+    let resultsHtml = '';
+    results.forEach((r) => {
+      const statusColor = r.status === 'complete' ? '#1a6620' : r.status === 'voicemail' ? '#5a3a8a' : '#a03030';
+      const statusLabel = r.status === 'complete' ? 'Scheduled' : r.status === 'voicemail' ? 'Voicemail Left' : 'Could Not Schedule';
+      const statusIcon = r.status === 'complete' ? '&#x2705;' : r.status === 'voicemail' ? '&#x1F4EC;' : '&#x274C;';
+
+      resultsHtml += `
+        <tr>
+          <td style="padding:14px 18px;border-bottom:1px solid #e8f0f8;">
+            <strong style="color:#1a3a5c;font-size:15px;">${r.doctorName}</strong><br>
+            <span style="color:#7a9aba;font-size:13px;">${r.phone}</span>
+          </td>
+          <td style="padding:14px 18px;border-bottom:1px solid #e8f0f8;text-align:center;">
+            <span style="color:${statusColor};font-weight:600;font-size:13px;">${statusIcon} ${statusLabel}</span>
+          </td>
+          <td style="padding:14px 18px;border-bottom:1px solid #e8f0f8;color:#2d4a6b;font-size:13px;">
+            ${r.details || 'No additional details.'}
+          </td>
+        </tr>`;
+    });
+
+    const htmlBody = `
+    <div style="font-family:'Inter',Arial,sans-serif;max-width:640px;margin:0 auto;background:#f0f4f8;padding:30px 20px;">
+      <div style="background:linear-gradient(135deg,#1a3a5c 0%,#254d80 100%);border-radius:12px 12px 0 0;padding:24px 30px;">
+        <h1 style="color:white;margin:0;font-size:22px;font-weight:700;">DocCaller</h1>
+        <p style="color:#a8c4e0;margin:6px 0 0;font-size:14px;">Appointment Scheduling Results</p>
+      </div>
+      <div style="background:white;border-radius:0 0 12px 12px;padding:28px 30px;border:1px solid #d8e8f5;border-top:none;">
+        <p style="color:#2d4a6b;font-size:15px;line-height:1.6;margin:0 0 20px;">
+          Hi${patientName ? ' ' + patientName : ''},<br><br>
+          Here are the results from your DocCaller scheduling session:
+        </p>
+        <table style="width:100%;border-collapse:collapse;background:#fafcff;border:1px solid #d8e8f5;border-radius:8px;">
+          <thead>
+            <tr style="background:#e8f4fd;">
+              <th style="padding:12px 18px;text-align:left;color:#1a3a5c;font-size:12px;text-transform:uppercase;letter-spacing:0.4px;">Doctor / Clinic</th>
+              <th style="padding:12px 18px;text-align:center;color:#1a3a5c;font-size:12px;text-transform:uppercase;letter-spacing:0.4px;">Status</th>
+              <th style="padding:12px 18px;text-align:left;color:#1a3a5c;font-size:12px;text-transform:uppercase;letter-spacing:0.4px;">Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${resultsHtml}
+          </tbody>
+        </table>
+        <p style="color:#8a9aaa;font-size:12px;margin:24px 0 0;line-height:1.6;">
+          This email was sent by DocCaller. If an appointment was scheduled, please make note of the date, time, and location above. If the AI left a voicemail or could not schedule, you may need to call the office directly.
+        </p>
+      </div>
+    </div>`;
+
+    await resend.emails.send({
+      from: 'DocCaller <results@doccaller.app>',
+      to: [email],
+      subject: 'Your DocCaller Appointment Results',
+      html: htmlBody
+    });
+
+    res.json({ success: true });
+
+  } catch (error) {
+    console.error('Email send error:', error);
+    res.status(500).json({ success: false, error: 'Failed to send results email.' });
+  }
+});
+
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
