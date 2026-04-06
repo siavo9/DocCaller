@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DocCaller â AI Medical Appointment Scheduler</title>
+  <title>DocCaller Ã¢ÂÂ AI Medical Appointment Scheduler</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* âââ RESET & BASE âââââââââââââââââââââââââââââââââââ */
+    /* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ RESET & BASE Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
@@ -18,7 +18,7 @@
       line-height: 1.5;
     }
 
-    /* âââ HEADER âââââââââââââââââââââââââââââââââââââââââ */
+    /* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ HEADER Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
     header {
       background: linear-gradient(135deg, #1a3a5c 0%, #254d80 100%);
       padding: 18px 40px;
@@ -60,14 +60,14 @@
       letter-spacing: 0.3px;
     }
 
-    /* âââ LAYOUT âââââââââââââââââââââââââââââââââââââââââ */
+    /* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ LAYOUT Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
     .container {
       max-width: 740px;
       margin: 32px auto 60px;
       padding: 0 20px;
     }
 
-    /* âââ INFO BANNER ââââââââââââââââââââââââââââââââââââ */
+    /* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ INFO BANNER Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
     .info-banner {
       background: white;
       border: 1px solid #d0e4f7;
@@ -92,7 +92,7 @@
       font-size: 13px;
     }
 
-    /* âââ CARDS âââââââââââââââââââââââââââââââââââââââââââ */
+    /* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ CARDS Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
     .card {
       background: white;
       border-radius: 12px;
@@ -131,7 +131,7 @@
       margin-left: auto;
     }
 
-    /* âââ FORM âââââââââââââââââââââââââââââââââââââââââââ */
+    /* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ FORM Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
     .form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -178,7 +178,18 @@
 
     input::placeholder { color: #b0c4d8; }
 
-    /* âââ APPOINTMENT ENTRIES ââââââââââââââââââââââââââââ */
+    .optional-note {
+      background: #eef6ff; border: 1px solid #b8d8f5; border-radius: 8px;
+      padding: 12px 16px; font-size: 13px; color: #2d5a8a; line-height: 1.6; margin-bottom: 20px;
+    }
+    .call-feedback {
+      font-size: 12px; color: #8a4a00; background: #fff7e6;
+      border: 1px solid #f5c06a; border-radius: 6px; padding: 8px 12px;
+      margin-top: 8px; line-height: 1.5; max-width: 440px;
+    }
+    .call-feedback strong { color: #6a3500; }
+
+    /* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ APPOINTMENT ENTRIES Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
     .appointment-entry {
       background: #f7faff;
       border: 1.5px solid #d0e4f7;
@@ -233,7 +244,7 @@
       background: #eef6ff;
     }
 
-    /* âââ CONSENT ââââââââââââââââââââââââââââââââââââââââ */
+    /* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ CONSENT Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
     .consent-box {
       background: #fffbf0;
       border: 1.5px solid #e8d490;
@@ -262,7 +273,7 @@
 
     .consent-text strong { color: #3a3010; }
 
-    /* âââ SUBMIT BUTTON ââââââââââââââââââââââââââââââââââ */
+    /* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ SUBMIT BUTTON Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
     .submit-btn {
       width: 100%;
       padding: 16px;
@@ -302,7 +313,7 @@
       margin-top: 10px;
     }
 
-    /* âââ STATUS SECTION âââââââââââââââââââââââââââââââââ */
+    /* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ STATUS SECTION Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
     .status-section { display: none; }
 
     .status-banner {
@@ -342,7 +353,7 @@
       margin-top: 2px;
     }
 
-    /* âââ CALL STATUS LIST âââââââââââââââââââââââââââââââ */
+    /* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ CALL STATUS LIST Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
     .call-status-list {
       list-style: none;
     }
@@ -405,7 +416,7 @@
     .badge-failed { background: #fde8e8; color: #a03030; }
     .badge-voicemail { background: #e8e0f5; color: #5a3a8a; }
 
-    /* âââ RESULTS ââââââââââââââââââââââââââââââââââââââââ */
+    /* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ RESULTS Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
     .results-card {
       background: linear-gradient(135deg, #f0fff4 0%, #e8fdf0 100%);
       border: 1.5px solid #68d391;
@@ -451,7 +462,7 @@
     .result-success { color: #1a6620; }
     .result-fail { color: #a03030; }
 
-    /* âââ ERROR DISPLAY ââââââââââââââââââââââââââââââââââ */
+    /* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ ERROR DISPLAY Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
     .error-banner {
       background: #fde8e8;
       border: 1.5px solid #e8a0a0;
@@ -463,7 +474,7 @@
       display: none;
     }
 
-    /* âââ FOOTER âââââââââââââââââââââââââââââââââââââââââ */
+    /* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ FOOTER Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
     footer {
       text-align: center;
       padding: 30px 20px;
@@ -473,7 +484,7 @@
       margin-top: 20px;
     }
 
-    /* âââ RESPONSIVE âââââââââââââââââââââââââââââââââââââ */
+    /* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ RESPONSIVE Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
     @media (max-width: 600px) {
       header { padding: 16px 20px; }
       .form-grid { grid-template-columns: 1fr; }
@@ -485,7 +496,7 @@
 </head>
 <body>
 
-<!-- âââ HEADER ââââââââââââââââââââââââââââââââââââââââââ -->
+<!-- Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ HEADER Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ -->
 <header>
   <div class="logo">
     <div class="logo-icon">&#x2719;</div>
@@ -498,19 +509,19 @@
 
 <div class="container">
 
-  <!-- âââ INFO BANNER ââââââââââââââââââââââââââââââââââââ -->
+  <!-- Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ INFO BANNER Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ -->
   <div class="info-banner">
     <strong>How DocCaller works:</strong> Enter the patient's information and up to 3 doctor or clinic phone numbers. Our AI agent will call each office, speak with the scheduler, provide the necessary information, and book appointments &mdash; all automatically.
     <br><br>
     <strong>Why we charge <span class="price-badge">$5.00 per session</span>:</strong> Each call is made by an AI phone agent that we pay for per minute of call time. The $5 fee covers up to 3 appointment calls or 60 minutes of total call time. This fee goes directly toward those costs.
   </div>
 
-  <!-- âââ ERROR BANNER âââââââââââââââââââââââââââââââââââ -->
+  <!-- Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ ERROR BANNER Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ -->
   <div class="error-banner" id="error-banner"></div>
 
-  <!-- ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  <!-- Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
        FORM SECTION
-       ââââââââââââââââââââââââââââââââââââââââââââââââââââââ -->
+       Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ -->
   <div id="form-section">
 
     <!-- Patient Info -->
@@ -519,26 +530,29 @@
         <div class="icon">&#x1F464;</div>
         Patient Information
       </div>
+      <div class="optional-note">
+        &#x2139;&#xFE0F; All fields are optional, but we strongly recommend filling in as much information as possible. Medical schedulers may require any of these details — missing information could prevent the AI from completing the call successfully.
+      </div>
       <div class="form-grid">
         <div class="form-group">
-          <label for="p-name">Full Name *</label>
-          <input type="text" id="p-name" placeholder="Jane Smith" required>
+          <label for="p-name">Full Name</label>
+          <input type="text" id="p-name" placeholder="Jane Smith">
         </div>
         <div class="form-group">
-          <label for="p-dob">Date of Birth *</label>
-          <input type="date" id="p-dob" required>
+          <label for="p-dob">Date of Birth</label>
+          <input type="date" id="p-dob">
         </div>
         <div class="form-group full-width">
-          <label for="p-address">Home Address *</label>
-          <input type="text" id="p-address" placeholder="123 Main St, City, State ZIP" required>
+          <label for="p-address">Home Address</label>
+          <input type="text" id="p-address" placeholder="123 Main St, City, State ZIP">
         </div>
         <div class="form-group">
-          <label for="p-phone">Phone Number *</label>
-          <input type="tel" id="p-phone" placeholder="(555) 123-4567" required>
+          <label for="p-phone">Phone Number</label>
+          <input type="tel" id="p-phone" placeholder="(555) 123-4567">
         </div>
         <div class="form-group">
-          <label for="p-insurance">Insurance Provider *</label>
-          <input type="text" id="p-insurance" placeholder="Blue Cross Blue Shield" required>
+          <label for="p-insurance">Insurance Provider</label>
+          <input type="text" id="p-insurance" placeholder="Blue Cross Blue Shield">
         </div>
         <div class="form-group">
           <label for="p-member">Member ID</label>
@@ -547,6 +561,10 @@
         <div class="form-group">
           <label for="p-group">Group Number</label>
           <input type="text" id="p-group" placeholder="Optional">
+        </div>
+        <div class="form-group">
+          <label for="p-mrn">Medical Record Number (MRN)</label>
+          <input type="text" id="p-mrn" placeholder="Optional — if known">
         </div>
       </div>
     </div>
@@ -582,9 +600,9 @@
 
   </div>
 
-  <!-- ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  <!-- Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
        STATUS SECTION (shown after payment)
-       ââââââââââââââââââââââââââââââââââââââââââââââââââââââ -->
+       Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ -->
   <div id="status-section" class="status-section">
 
     <div class="status-banner" id="status-banner">
@@ -613,16 +631,16 @@
   Patient information is not stored and is only used during the scheduling call.
 </footer>
 
-<!-- ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+<!-- Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
      JAVASCRIPT
-     ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ -->
+     Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ -->
 <script>
-  // âââ STATE ââââââââââââââââââââââââââââââââââââââââââââââ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ STATE Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   let appointments = [{ name: '', specialty: '', phone: '' }];
   let activeCalls = [];
   let completedCount = 0;
 
-  // âââ RENDER APPOINTMENT ENTRIES âââââââââââââââââââââââââ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ RENDER APPOINTMENT ENTRIES Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   function renderAppointments() {
     const container = document.getElementById('appt-container');
     container.innerHTML = '';
@@ -683,7 +701,7 @@
     return div.innerHTML;
   }
 
-  // âââ FORM VALIDATION âââââââââââââââââââââââââââââââââââ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ FORM VALIDATION Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   function validateForm() {
     const fields = {
       'Full Name': document.getElementById('p-name').value.trim(),
@@ -715,7 +733,7 @@
     return true;
   }
 
-  // âââ SUBMIT â STRIPE âââââââââââââââââââââââââââââââââââ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ SUBMIT Ã¢ÂÂ STRIPE Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   function handleSubmit() {
     if (!validateForm()) return;
 
@@ -728,7 +746,8 @@
         phone: document.getElementById('p-phone').value.trim(),
         insurance: document.getElementById('p-insurance').value.trim(),
         memberId: document.getElementById('p-member').value.trim(),
-        groupNumber: document.getElementById('p-group').value.trim()
+        groupNumber: document.getElementById('p-group').value.trim(),
+        mrn: document.getElementById('p-mrn').value.trim()
       },
       appointments: appointments.filter(a => a.name.trim() && a.phone.trim())
     };
@@ -740,7 +759,7 @@
     window.location.href = 'https://buy.stripe.com/bJe4gA0Cufnv9Wm32E7N601';
   }
 
-  // âââ ON PAGE LOAD ââââââââââââââââââââââââââââââââââââââ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ ON PAGE LOAD Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   window.addEventListener('DOMContentLoaded', () => {
     renderAppointments();
 
@@ -770,7 +789,7 @@
     }
   });
 
-  // âââ START CALLS âââââââââââââââââââââââââââââââââââââââ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ START CALLS Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   async function startCalls(formData) {
     try {
       const res = await fetch('/api/schedule', {
@@ -805,7 +824,7 @@
     }
   }
 
-  // âââ POLL CALL STATUS âââââââââââââââââââââââââââââââââ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ POLL CALL STATUS Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   function pollCall(callId, index) {
     let attempts = 0;
     const maxAttempts = 240; // 240 * 15s = 60 minutes
@@ -829,17 +848,17 @@
 
           if (wasVoicemail) {
             updateCallItem(index, 'voicemail',
-              `Reached voicemail â left a message.${callMin ? ' (' + callMin + ')' : ''}`);
+              `Reached voicemail Ã¢ÂÂ left a message.${callMin ? ' (' + callMin + ')' : ''}`);
           } else {
             updateCallItem(index, 'complete',
-              summary || 'Call completed â see transcript for details.' + (callMin ? ' (' + callMin + ')' : ''));
+              summary || 'Call completed Ã¢ÂÂ see transcript for details.' + (callMin ? ' (' + callMin + ')' : ''));
           }
 
           completedCount++;
           checkAllDone();
 
         } else if (data.status === 'failed' || data.status === 'error') {
-          updateCallItem(index, 'failed', 'Call failed â the office may not have answered.');
+          updateCallItem(index, 'failed', 'Call failed Ã¢ÂÂ the office may not have answered.');
           completedCount++;
           checkAllDone();
 
@@ -859,7 +878,7 @@
     setTimeout(check, 10000);
   }
 
-  // âââ RENDER CALL STATUS ITEMS âââââââââââââââââââââââââ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ RENDER CALL STATUS ITEMS Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   function renderCallItem(index, doctorName, phone, status) {
     const list = document.getElementById('call-list');
     const li = document.createElement('li');
@@ -876,7 +895,7 @@
     list.appendChild(li);
   }
 
-  function updateCallItem(index, status, message) {
+  function updateCallItem(index, status, message, feedback) {
     const badge = document.getElementById(`call-badge-${index}`);
     const result = document.getElementById(`call-result-${index}`);
 
@@ -888,7 +907,7 @@
           break;
         case 'failed':
           badge.className = 'badge badge-failed';
-          badge.innerHTML = '&#x274C; Failed';
+          badge.innerHTML = '&#x274C; Could Not Schedule';
           break;
         case 'voicemail':
           badge.className = 'badge badge-voicemail';
@@ -897,12 +916,33 @@
       }
     }
 
-    if (result && message) {
-      result.textContent = message;
+    if (result && message) result.textContent = message;
+    if (feedback && item) {
+      const fb = document.createElement('div');
+      fb.className = 'call-feedback';
+      fb.innerHTML = '<strong>&#x26A0;&#xFE0F; Scheduling Issue:</strong> ' + feedback;
+      item.querySelector('.call-info').appendChild(fb);
     }
   }
 
-  // âââ CHECK IF ALL CALLS ARE DONE ââââââââââââââââââââââ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ CHECK IF ALL CALLS ARE DONE Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  function detectMissingInfo(text) {
+    if (!text) return null;
+    const t = text.toLowerCase();
+    const signals = [
+      { p: /date of birth|dob|birth date/, m: 'Date of birth was requested — ensure it is filled in.' },
+      { p: /insurance|member id|group number/, m: 'Insurance information was requested — consider adding Member ID or Group Number.' },
+      { p: /medical record|mrn|record number/, m: 'Medical Record Number (MRN) was requested — consider adding it.' },
+      { p: /referral/, m: 'A referral may be required before booking.' },
+      { p: /unable to schedule|could not schedule|cannot schedule|not able to book/, m: 'The scheduler was unable to book the appointment during this call.' },
+      { p: /call back|call us back|return our call/, m: 'The office asked for a direct callback.' },
+      { p: /prior authorization|pre-authorization/, m: 'Prior authorization may be required — check with your insurance.' },
+      { p: /not accept|doesn't accept|out of network/, m: 'The office may not accept this insurance.' }
+    ];
+    const found = signals.filter(s => s.p.test(t));
+    return found.length ? found.map(s => s.m).join(' ') : null;
+  }
+
   function checkAllDone() {
     if (completedCount >= activeCalls.length) {
       // Update banner
@@ -940,7 +980,7 @@
     }
   }
 
-  // âââ ERROR HELPERS ââââââââââââââââââââââââââââââââââââ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ ERROR HELPERS Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   function showError(msg) {
     const el = document.getElementById('error-banner');
     el.textContent = msg;
