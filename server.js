@@ -224,7 +224,7 @@ app.post('/api/send-results', async (req, res) => {
             <span style="color:${statusColor};font-weight:600;font-size:13px;">${statusIcon} ${statusLabel}</span>
           </td>
           <td style="padding:14px 18px;border-bottom:1px solid #e8f0f8;color:#2d4a6b;font-size:13px;">
-            ${r.details || 'No additional details.'}
+            ${r.details || 'No additional details.'}${r.callId ? '<br><a href="https://doccaller.app/transcript/' + r.callId + '" style="color:#4a90d9;text-decoration:underline;font-size:12px;">View transcript</a>' : ''}
           </td>
         </tr>`;
     });
@@ -270,6 +270,84 @@ app.post('/api/send-results', async (req, res) => {
   } catch (error) {
     console.error('Email send error:', error);
     res.status(500).json({ success: false, error: 'Failed to send results email.' });
+  }
+});
+
+// Transcript viewer page
+app.get('/transcript/:callId', async (req, res) => {
+  try {
+    if (!BLAND_API_KEY) {
+      return res.status(500).send('Server misconfigured');
+    }
+
+    const { callId } = req.params;
+    const response = await fetch(`https://api.bland.ai/v1/calls/${callId}`, {
+      headers: { 'authorization': BLAND_API_KEY }
+    });
+    const data = await response.json();
+
+    const transcript = data.concatenated_transcript || 'No transcript available for this call.';
+    const doctorName = data.to ? data.to : 'Unknown';
+    const callLength = data.call_length ? `${Math.round(data.call_length / 60 * 10) / 10} min` : 'N/A';
+    const callStatus = data.status || 'unknown';
+
+    res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Call Transcript - DocCaller</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4f8; color: #1a2e4a; min-height: 100vh; }
+    header { background: linear-gradient(135deg, #1a3a5c 0%, #254d80 100%); padding: 24px 40px; }
+    header h1 { color: white; font-size: 22px; font-weight: 700; }
+    header p { color: #a8c4e0; font-size: 13px; margin-top: 4px; }
+    .container { max-width: 740px; margin: 32px auto 60px; padding: 0 20px; }
+    .meta { background: white; border: 1px solid #d8e8f5; border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; display: flex; gap: 32px; flex-wrap: wrap; }
+    .meta-item { display: flex; flex-direction: column; gap: 4px; }
+    .meta-label { font-size: 11px; font-weight: 500; color: #5a7a9a; text-transform: uppercase; letter-spacing: 0.4px; }
+    .meta-value { font-size: 15px; font-weight: 600; color: #1a3a5c; }
+    .transcript-card { background: white; border: 1px solid #d8e8f5; border-radius: 12px; padding: 28px; }
+    .transcript-title { font-size: 15px; font-weight: 600; color: #1a3a5c; margin-bottom: 18px; }
+    .transcript-text { font-size: 14px; line-height: 1.8; color: #2d4a6b; white-space: pre-wrap; word-wrap: break-word; }
+    .back-link { display: inline-block; margin-bottom: 20px; color: #4a90d9; text-decoration: none; font-size: 14px; font-weight: 500; }
+    .back-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>DocCaller</h1>
+    <p>Call Transcript</p>
+  </header>
+  <div class="container">
+    <a href="/" class="back-link">&larr; Back to DocCaller</a>
+    <div class="meta">
+      <div class="meta-item">
+        <span class="meta-label">Called</span>
+        <span class="meta-value">${doctorName}</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Duration</span>
+        <span class="meta-value">${callLength}</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Status</span>
+        <span class="meta-value">${callStatus}</span>
+      </div>
+    </div>
+    <div class="transcript-card">
+      <div class="transcript-title">Full Transcript</div>
+      <div class="transcript-text">${transcript.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+    </div>
+  </div>
+</body>
+</html>`);
+
+  } catch (error) {
+    console.error('Transcript error:', error);
+    res.status(500).send('Failed to load transcript.');
   }
 });
 

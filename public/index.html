@@ -990,10 +990,13 @@
 
           if (wasVoicemail) {
             updateCallItem(index, 'voicemail',
-              `Reached voicemail - left a message.${callMin ? ' (' + callMin + ')' : ''}`);
+              `Reached voicemail - left a message.${callMin ? ' (' + callMin + ')' : ''}`,
+              null, callId);
           } else {
-            updateCallItem(index, 'complete',
-              summary || 'Call completed - see transcript for details.' + (callMin ? ' (' + callMin + ')' : ''));
+            const msg = summary
+              ? summary + (callMin ? ' (' + callMin + ')' : '')
+              : 'Call completed' + (callMin ? ' (' + callMin + ')' : '');
+            updateCallItem(index, 'complete', msg, null, callId);
           }
 
           completedCount++;
@@ -1037,9 +1040,14 @@
     list.appendChild(li);
   }
 
-  function updateCallItem(index, status, message, feedback) {
+  function updateCallItem(index, status, message, feedback, callId) {
     const badge = document.getElementById(`call-badge-${index}`);
     const result = document.getElementById(`call-result-${index}`);
+
+    // Store callId on the active call for email links later
+    if (callId && activeCalls[index]) {
+      activeCalls[index].callId = callId;
+    }
 
     if (badge) {
       switch (status) {
@@ -1058,7 +1066,12 @@
       }
     }
 
-    if (result && message) result.textContent = message;
+    if (result && message) {
+      const transcriptLink = callId
+        ? ` — <a href="/transcript/${callId}" target="_blank" style="color:#4a90d9;text-decoration:underline;">View transcript</a>`
+        : '';
+      result.innerHTML = escapeHtml(message) + transcriptLink;
+    }
     if (feedback && item) {
       const fb = document.createElement('div');
       fb.className = 'call-feedback';
@@ -1106,12 +1119,16 @@
         const isSuccess = badge && badge.classList.contains('badge-complete');
         const isVoicemail = badge && badge.classList.contains('badge-voicemail');
 
+        const transcriptLink = call.callId
+          ? ` — <a href="/transcript/${call.callId}" target="_blank" style="color:#4a90d9;text-decoration:underline;">View transcript</a>`
+          : '';
+
         html += `
           <div class="result-entry">
             <span class="result-name">${escapeHtml(call.doctorName)}</span>
             <span class="result-phone">${escapeHtml(call.phone)}</span>
             <div class="result-detail ${isSuccess ? 'result-success' : (isVoicemail ? 'result-success' : 'result-fail')}">
-              ${badge ? badge.textContent : ''} &mdash; ${result ? escapeHtml(result.textContent) : 'No details available.'}
+              ${badge ? badge.textContent : ''} &mdash; ${result ? escapeHtml(result.textContent) : 'No details available.'}${transcriptLink}
             </div>
           </div>
         `;
@@ -1130,6 +1147,7 @@
           return {
             doctorName: call.doctorName,
             phone: call.phone,
+            callId: call.callId || null,
             status: isComplete ? 'complete' : (isVoicemail ? 'voicemail' : 'failed'),
             details: result ? result.textContent : 'No details available.'
           };

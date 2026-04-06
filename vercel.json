@@ -16,6 +16,10 @@
       "dest": "server.js"
     },
     {
+      "src": "/transcript/(.*)",
+      "dest": "server.js"
+    },
+    {
       "src": "/(.*\\.(html|css|js|svg|png|jpg|ico))",
       "dest": "public/$1"
     },
