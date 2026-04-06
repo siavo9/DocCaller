@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DocCaller - AI Medical Appointment Scheduler</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* --- RESET & BASE ----------------------------------- */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f0f4f8;
+      color: #1a2e4a;
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* --- HEADER ---------------------------------------- */
+    header {
+      background: linear-gradient(135deg, #1a3a5c 0%, #254d80 100%);
+      padding: 24px 40px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 2px 12px rgba(26,58,92,0.15);
+    }
+
+    .logo-img {
+      height: 120px;
+      width: auto;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: rgba(255,255,255,0.15);
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: white;
+    }
+
+    .logo-text {
+      color: white;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-sub {
+      color: #a8c4e0;
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: 0.3px;
+    }
+
+    /* --- LAYOUT ---------------------------------------- */
+    .container {
+      max-width: 740px;
+      margin: 32px auto 60px;
+      padding: 0 20px;
+    }
+
+    /* --- INFO BANNER ------------------------------------ */
+    .info-banner {
+      background: white;
+      border: 1px solid #d0e4f7;
+      border-left: 4px solid #4a90d9;
+      border-radius: 8px;
+      padding: 18px 22px;
+      margin-bottom: 28px;
+      font-size: 14px;
+      color: #2d4a6b;
+      line-height: 1.7;
+    }
+
+    .info-banner strong { color: #1a3a5c; }
+
+    .price-badge {
+      display: inline-block;
+      background: #e8f4fd;
+      color: #1a3a5c;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 13px;
+    }
+
+    /* --- CARDS ---------------------------------------- */
+    .card {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #d8e8f5;
+      padding: 28px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 4px rgba(26,58,92,0.05);
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1a3a5c;
+      margin-bottom: 22px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title .icon {
+      width: 30px;
+      height: 30px;
+      background: #e8f4fd;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .card-title .badge {
+      font-weight: 400;
+      color: #7a9aba;
+      font-size: 13px;
+      margin-left: auto;
+    }
+
+    /* --- FORM ---------------------------------------- */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #5a7a9a;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="tel"] {
+      padding: 10px 14px;
+      border: 1.5px solid #d0dff0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      color: #1a2e4a;
+      background: #fafcff;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #4a90d9;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(74,144,217,0.1);
+    }
+
+    input::placeholder { color: #b0c4d8; }
+
+    .optional-note {
+      background: #eef6ff; border: 1px solid #b8d8f5; border-radius: 8px;
+      padding: 12px 16px; font-size: 13px; color: #2d5a8a; line-height: 1.6; margin-bottom: 20px;
+    }
+    .call-feedback {
+      font-size: 12px; color: #8a4a00; background: #fff7e6;
+      border: 1px solid #f5c06a; border-radius: 6px; padding: 8px 12px;
+      margin-top: 8px; line-height: 1.5; max-width: 440px;
+    }
+    .call-feedback strong { color: #6a3500; }
+
+    /* --- APPOINTMENT ENTRIES ---------------------------- */
+    .appointment-entry {
+      background: #f7faff;
+      border: 1.5px solid #d0e4f7;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 14px;
+    }
+
+    .entry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .entry-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #3a6a9a;
+    }
+
+    .remove-btn {
+      background: none;
+      border: none;
+      color: #d06060;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: 'Inter', sans-serif;
+      padding: 4px 10px;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+
+    .remove-btn:hover { background: #fde8e8; }
+
+    .timeline-group {
+      margin-top: 12px;
+    }
+
+    .timeline-group label {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .timeline-group select, .timeline-group input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid #d0dff0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      color: #1a2e4a;
+      background: #fafcff;
+    }
+
+    .add-btn {
+      width: 100%;
+      padding: 14px;
+      border: 2px dashed #b0cce8;
+      background: transparent;
+      border-radius: 10px;
+      color: #4a90d9;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+    }
+
+    .add-btn:hover {
+      border-color: #4a90d9;
+      background: #eef6ff;
+    }
+
+    /* --- CONSENT ---------------------------------------- */
+    .consent-box {
+      background: #fffbf0;
+      border: 1.5px solid #e8d490;
+      border-radius: 10px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .consent-box input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      margin-top: 1px;
+      flex-shrink: 0;
+      accent-color: #4a90d9;
+      cursor: pointer;
+    }
+
+    .consent-text {
+      font-size: 13px;
+      color: #5a4a20;
+      line-height: 1.65;
+    }
+
+    .consent-text strong { color: #3a3010; }
+
+    /* --- SUBMIT BUTTON ---------------------------------- */
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #1a3a5c 0%, #2a5a8c 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(26,58,92,0.2);
+    }
+
+    .submit-btn:hover {
+      background: linear-gradient(135deg, #254d80 0%, #3a6fa0 100%);
+      box-shadow: 0 6px 20px rgba(26,58,92,0.25);
+      transform: translateY(-1px);
+    }
+
+    .submit-btn:disabled {
+      background: #a0b8d0;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .promo-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .promo-row input {
+      flex: 1;
+      padding: 11px 16px;
+      border: 1.5px solid #d0dce8;
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      color: #1a2e4a;
+      background: #fafcff;
+    }
+
+    .promo-row button {
+      padding: 11px 20px;
+      background: #3a6a9a;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .promo-row button:hover { background: #2a5a8a; }
+
+    .promo-msg {
+      font-size: 13px;
+      margin-top: -6px;
+      margin-bottom: 10px;
+      min-height: 18px;
+    }
+
+    .promo-msg.success { color: #1a6620; }
+    .promo-msg.error   { color: #a03030; }
+
+    .submit-note {
+      text-align: center;
+      font-size: 12px;
+      color: #8a9aaa;
+      margin-top: 10px;
+    }
+
+    /* --- STATUS SECTION --------------------------------- */
+    .status-section { display: none; }
+
+    .status-banner {
+      background: linear-gradient(135deg, #1a3a5c 0%, #254d80 100%);
+      color: white;
+      border-radius: 12px;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 14px rgba(26,58,92,0.15);
+    }
+
+    .pulse-dot {
+      width: 14px;
+      height: 14px;
+      background: #5cb8ff;
+      border-radius: 50%;
+      animation: pulse 1.5s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.4); }
+    }
+
+    .status-banner-title {
+      font-weight: 600;
+      font-size: 17px;
+    }
+
+    .status-banner-sub {
+      font-size: 13px;
+      opacity: 0.75;
+      margin-top: 2px;
+    }
+
+    /* --- CALL STATUS LIST ------------------------------- */
+    .call-status-list {
+      list-style: none;
+    }
+
+    .call-status-item {
+      background: white;
+      border: 1px solid #d8e8f5;
+      border-radius: 10px;
+      padding: 18px 22px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: 0 1px 4px rgba(26,58,92,0.05);
+    }
+
+    .call-info { display: flex; flex-direction: column; gap: 3px; }
+
+    .call-doctor {
+      font-weight: 600;
+      font-size: 15px;
+      color: #1a3a5c;
+    }
+
+    .call-phone {
+      font-size: 13px;
+      color: #7a9aba;
+    }
+
+    .call-result {
+      font-size: 13px;
+      color: #2d6a4a;
+      margin-top: 8px;
+      line-height: 1.5;
+      max-width: 440px;
+    }
+
+    .badge {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .badge-calling {
+      background: #fff3cd;
+      color: #856404;
+      animation: badgePulse 2s ease-in-out infinite;
+    }
+
+    @keyframes badgePulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .badge-complete { background: #d4edda; color: #155724; }
+    .badge-failed { background: #fde8e8; color: #a03030; }
+    .badge-voicemail { background: #e8e0f5; color: #5a3a8a; }
+
+    /* --- RESULTS ---------------------------------------- */
+    .results-card {
+      background: linear-gradient(135deg, #f0fff4 0%, #e8fdf0 100%);
+      border: 1.5px solid #68d391;
+      border-radius: 12px;
+      padding: 24px;
+      margin-top: 24px;
+      box-shadow: 0 2px 8px rgba(104,211,145,0.15);
+    }
+
+    .results-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #1a5c2e;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .result-entry {
+      padding: 12px 0;
+      border-bottom: 1px solid #c3e6cb;
+    }
+
+    .result-entry:last-child { border-bottom: none; }
+
+    .result-name {
+      font-weight: 600;
+      color: #1a3a5c;
+    }
+
+    .result-phone {
+      color: #7a9aba;
+      font-size: 13px;
+    }
+
+    .result-detail {
+      font-size: 13px;
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    .result-success { color: #1a6620; }
+    .result-fail { color: #a03030; }
+
+    /* --- ERROR DISPLAY ---------------------------------- */
+    .error-banner {
+      background: #fde8e8;
+      border: 1.5px solid #e8a0a0;
+      border-radius: 10px;
+      padding: 16px 22px;
+      color: #6a2020;
+      font-size: 14px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    /* --- FOOTER ---------------------------------------- */
+    footer {
+      text-align: center;
+      padding: 30px 20px;
+      font-size: 12px;
+      color: #8a9aaa;
+      border-top: 1px solid #e0e8f0;
+      margin-top: 20px;
+    }
+
+    /* --- RESPONSIVE ------------------------------------- */
+    @media (max-width: 600px) {
+      header { padding: 16px 20px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .container { padding: 0 16px; margin-top: 24px; }
+      .card { padding: 20px; }
+      .call-status-item { flex-direction: column; gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- --- HEADER ---------------------------------------- -->
+<header>
+  <div class="logo">
+    <img src="/logo.svg" alt="DocCaller" class="logo-img">
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- --- INFO BANNER ------------------------------------ -->
+  <div class="info-banner">
+    <strong>How DocCaller works:</strong> Enter the patient's information and up to 3 doctor or clinic phone numbers. Our AI agent will call each office, speak with the scheduler, provide the necessary information, and book appointments &mdash; all automatically.
+    <br><br>
+    <strong>Why we charge <span class="price-badge">$5.00 per session</span>:</strong> Each call is made by an AI phone agent that we pay for per minute of call time. The $5 fee covers up to 3 appointment calls or 60 minutes of total call time. This fee goes directly toward those costs.
+  </div>
+
+  <!-- --- ERROR BANNER ----------------------------------- -->
+  <div class="error-banner" id="error-banner"></div>
+
+  <!-- ----------------------------------------
+       FORM SECTION
+       ---------------------------------------- -->
+  <div id="form-section">
+
+    <!-- Patient Info -->
+    <div class="card">
+      <div class="card-title">
+        <div class="icon">&#x1F464;</div>
+        Patient Information
+      </div>
+      <div class="optional-note">
+        &#x2139;&#xFE0F; All fields are optional, but we strongly recommend filling in as much information as possible. Medical schedulers may require any of these details - missing information could prevent the AI from completing the call successfully.
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="p-name">Full Name</label>
+          <input type="text" id="p-name" placeholder="Jane Smith">
+        </div>
+        <div class="form-group">
+          <label for="p-dob">Date of Birth</label>
+          <input type="date" id="p-dob">
+        </div>
+        <div class="form-group full-width">
+          <label for="p-address">Home Address</label>
+          <input type="text" id="p-address" placeholder="123 Main St, City, State ZIP">
+        </div>
+        <div class="form-group">
+          <label for="p-phone">Phone Number</label>
+          <input type="tel" id="p-phone" placeholder="(555) 123-4567">
+        </div>
+        <div class="form-group">
+          <label for="p-insurance">Insurance Provider</label>
+          <input type="text" id="p-insurance" placeholder="Blue Cross Blue Shield">
+        </div>
+        <div class="form-group">
+          <label for="p-member">Member ID</label>
+          <input type="text" id="p-member" placeholder="XYZ123456789">
+        </div>
+        <div class="form-group">
+          <label for="p-group">Group Number</label>
+          <input type="text" id="p-group" placeholder="Optional">
+        </div>
+        <div class="form-group">
+          <label for="p-mrn">Medical Record Number (MRN)</label>
+          <input type="text" id="p-mrn" placeholder="Optional - if known">
+        </div>
+      </div>
+    </div>
+
+    <!-- Appointment Requests -->
+    <div class="card">
+      <div class="card-title">
+        <div class="icon">&#x1F4CB;</div>
+        Appointment Requests
+        <span class="badge" style="background:#e8f4fd;color:#3a6a9a;font-size:12px;padding:4px 10px;">Max 3</span>
+      </div>
+
+      <div id="appt-container"></div>
+
+      <button class="add-btn" id="add-btn" onclick="addAppointment()">
+        + Add Another Appointment
+      </button>
+    </div>
+
+    <!-- Consent -->
+    <div class="consent-box">
+      <input type="checkbox" id="consent-check">
+      <div class="consent-text">
+        <strong>Patient Consent Required:</strong> Do you have the patient's permission to share their personal and insurance information with DocCaller for scheduling purposes? By checking this box, you confirm that you have obtained the patient's explicit consent to share their information with our service and the medical offices being called.
+      </div>
+    </div>
+
+    <!-- Discount Code -->
+    <div class="promo-row">
+      <input type="text" id="promo-code" placeholder="Have a discount code?">
+      <button type="button" onclick="applyPromo()">Apply</button>
+    </div>
+    <div class="promo-msg" id="promo-msg"></div>
+
+    <!-- Submit -->
+    <button class="submit-btn" id="submit-btn" onclick="handleSubmit()">
+      &#x1F512;&ensp;Pay $5 &amp; Schedule Appointments
+    </button>
+    <p class="submit-note" id="submit-note">Secured by Stripe &middot; You'll be redirected to complete payment</p>
+
+  </div>
+
+  <!-- ----------------------------------------
+       STATUS SECTION (shown after payment)
+       ---------------------------------------- -->
+  <div id="status-section" class="status-section">
+
+    <div class="status-banner" id="status-banner">
+      <div class="pulse-dot" id="pulse-dot"></div>
+      <div>
+        <div class="status-banner-title" id="banner-title">Calls In Progress</div>
+        <div class="status-banner-sub" id="banner-sub">Our AI agent is calling each office. This may take a few minutes per call.</div>
+      </div>
+    </div>
+
+    <ul class="call-status-list" id="call-list"></ul>
+
+    <div id="results-section" style="display:none;">
+      <div class="results-card">
+        <div class="results-title">&#x2705;&ensp;All Calls Complete</div>
+        <div id="results-content"></div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<footer>
+  DocCaller &middot; AI-powered appointment scheduling &middot; Not a licensed medical service<br>
+  Patient information is not stored and is only used during the scheduling call.
+</footer>
+
+<!-- ----------------------------------------
+     JAVASCRIPT
+     ---------------------------------------- -->
+<script>
+  // --- STATE ----------------------------------------
+  let appointments = [{ name: '', specialty: '', phone: '', timeline: '', timelineCustom: '' }];
+  let activeCalls = [];
+  let completedCount = 0;
+  let promoApplied = false;
+
+  // --- RENDER APPOINTMENT ENTRIES -------------------------
+  function renderAppointments() {
+    const container = document.getElementById('appt-container');
+    container.innerHTML = '';
+
+    appointments.forEach((appt, i) => {
+      const div = document.createElement('div');
+      div.className = 'appointment-entry';
+      div.innerHTML = `
+        <div class="entry-header">
+          <span class="entry-label">Appointment ${i + 1}</span>
+          ${appointments.length > 1
+            ? `<button class="remove-btn" onclick="removeAppointment(${i})">&#x2715; Remove</button>`
+            : ''}
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Doctor / Clinic Name *</label>
+            <input type="text" placeholder="Dr. Smith or City Medical Clinic"
+              value="${escapeHtml(appt.name)}"
+              oninput="appointments[${i}].name = this.value">
+          </div>
+          <div class="form-group">
+            <label>Specialty (optional)</label>
+            <input type="text" placeholder="e.g. Cardiology, Primary Care"
+              value="${escapeHtml(appt.specialty)}"
+              oninput="appointments[${i}].specialty = this.value">
+          </div>
+          <div class="form-group full-width">
+            <label>Office Phone Number (optional - weâll look it up if blank)</label>
+            <input type="tel" placeholder="(555) 123-4567"
+              value="${escapeHtml(appt.phone)}"
+              oninput="appointments[${i}].phone = this.value">
+          </div>
+          <div class="form-group full-width timeline-group">
+            <label>Scheduling Timeline Preference</label>
+            <select oninput="appointments[${i}].timeline = this.value">
+              <option value="">No preference</option>
+              <option value="as soon as possible" ${appt.timeline==='as soon as possible'?'selected':''}>As soon as possible</option>
+              <option value="within 1-2 weeks" ${appt.timeline==='within 1-2 weeks'?'selected':''}>Within 1-2 weeks</option>
+              <option value="within 1 month" ${appt.timeline==='within 1 month'?'selected':''}>Within 1 month</option>
+              <option value="within 2-3 months" ${appt.timeline==='within 2-3 months'?'selected':''}>Within 2-3 months</option>
+              <option value="within 6 months" ${appt.timeline==='within 6 months'?'selected':''}>Within 6 months</option>
+              <option value="custom" ${appt.timeline==='custom'?'selected':''}>Custom (specify below)</option>
+            </select>
+          </div>
+          <div class="form-group full-width" style="display:${appt.timeline==='custom'?'flex':'none'}">
+            <label>Custom Timeline Details</label>
+            <input type="text" placeholder="e.g., Sometime in September, or after my surgery on May 10th"
+              value="${escapeHtml(appt.timelineCustom||'')}"
+              oninput="appointments[${i}].timelineCustom = this.value">
+          </div>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+
+    document.getElementById('add-btn').style.display =
+      appointments.length >= 3 ? 'none' : 'block';
+  }
+
+  function addAppointment() {
+    if (appointments.length < 3) {
+      appointments.push({ name: '', specialty: '', phone: '', timeline: '', timelineCustom: '' });
+      renderAppointments();
+    }
+  }
+
+  function removeAppointment(i) {
+    appointments.splice(i, 1);
+    renderAppointments();
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
+  }
+
+  // --- FORM VALIDATION -----------------------------------
+  function validateForm() {
+    const fields = {
+      'Full Name': document.getElementById('p-name').value.trim(),
+      'Date of Birth': document.getElementById('p-dob').value,
+      'Address': document.getElementById('p-address').value.trim(),
+      'Phone': document.getElementById('p-phone').value.trim(),
+      'Insurance': document.getElementById('p-insurance').value.trim()
+    };
+
+    for (const [label, val] of Object.entries(fields)) {
+      if (!val) {
+        showError(`Please fill in the patient's ${label}.`);
+        return false;
+      }
+    }
+
+    const valid = appointments.filter(a => a.name.trim());
+    if (valid.length === 0) {
+      showError('Please add at least one appointment with a doctor name and phone number.');
+      return false;
+    }
+
+    if (!document.getElementById('consent-check').checked) {
+      showError('Please confirm you have the patient\'s permission before proceeding.');
+      return false;
+    }
+
+    hideError();
+    return true;
+  }
+
+  // --- SUBMIT -> STRIPE -----------------------------------
+  function handleSubmit() {
+    if (!validateForm()) return;
+
+    // Collect form data
+    const formData = {
+      patient: {
+        name: document.getElementById('p-name').value.trim(),
+        dob: document.getElementById('p-dob').value,
+        address: document.getElementById('p-address').value.trim(),
+        phone: document.getElementById('p-phone').value.trim(),
+        insurance: document.getElementById('p-insurance').value.trim(),
+        memberId: document.getElementById('p-member').value.trim(),
+        groupNumber: document.getElementById('p-group').value.trim(),
+        mrn: document.getElementById('p-mrn').value.trim()
+      },
+      appointments: appointments.filter(a => a.name.trim()).map(a => ({...a, timeline: a.timeline === 'custom' ? (a.timelineCustom || 'custom') : (a.timeline || '')}))
+    };
+
+    if (promoApplied) {
+      // Bypass Stripe - go directly to call flow
+      document.getElementById('form-section').style.display = 'none';
+      document.getElementById('status-section').style.display = 'block';
+      formData.appointments.forEach(function(appt, i) {
+        renderCallItem(i, appt.name, appt.phone, 'calling');
+      });
+      startCalls(formData);
+    } else {
+      // Save to localStorage before Stripe redirect
+      localStorage.setItem('doccaller_data', JSON.stringify(formData));
+      // Redirect to Stripe payment link
+      window.location.href = 'https://buy.stripe.com/bJe4gA0Cufnv9Wm32E7N601';
+    }
+  }
+
+  // Promo code
+  function applyPromo() {
+    const code = document.getElementById('promo-code').value.trim();
+    const msg  = document.getElementById('promo-msg');
+    const btn  = document.getElementById('submit-btn');
+    const note = document.getElementById('submit-note');
+    if (code === 'ovaisinamullah') {
+      promoApplied = true;
+      msg.className = 'promo-msg success';
+      msg.textContent = '\u2713 Discount applied \u2014 payment skipped.';
+      btn.innerHTML = '&#x1F50D;&ensp;Schedule Appointments (Free)';
+      note.style.display = 'none';
+    } else {
+      promoApplied = false;
+      msg.className = 'promo-msg error';
+      msg.textContent = 'Invalid code. Please try again.';
+      btn.innerHTML = '&#x1F512;&ensp;Pay $5 &amp; Schedule Appointments';
+      note.style.display = '';
+    }
+  }
+
+  // --- ON PAGE LOAD --------------------------------------
+  window.addEventListener('DOMContentLoaded', () => {
+    renderAppointments();
+
+    // Check if returning from Stripe
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('paid') || params.has('session_id')) {
+      const savedData = localStorage.getItem('doccaller_data');
+      if (savedData) {
+        const formData = JSON.parse(savedData);
+        localStorage.removeItem('doccaller_data');
+
+        // Clean URL
+        window.history.replaceState({}, '', '/');
+
+        // Switch to status view
+        document.getElementById('form-section').style.display = 'none';
+        document.getElementById('status-section').style.display = 'block';
+
+        // Render initial call items
+        formData.appointments.forEach((appt, i) => {
+          renderCallItem(i, appt.name, appt.phone, 'calling');
+        });
+
+        // Fire the calls
+        startCalls(formData);
+      }
+    }
+  });
+
+  // --- START CALLS ---------------------------------------
+  async function startCalls(formData) {
+    try {
+      const res = await fetch('/api/schedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        showStatusError(data.error || 'Failed to start calls. Please contact support.');
+        return;
+      }
+
+      activeCalls = data.calls;
+
+      // Update items with call IDs & begin polling
+      data.calls.forEach((call, i) => {
+        if (call.callId) {
+          pollCall(call.callId, i);
+        } else {
+          // Call failed to initiate
+          updateCallItem(i, 'failed', call.error || 'Could not connect');
+          completedCount++;
+          checkAllDone();
+        }
+      });
+
+    } catch (err) {
+      showStatusError('Network error. Please check your connection and try again.');
+    }
+  }
+
+  // --- POLL CALL STATUS ---------------------------------
+  function pollCall(callId, index) {
+    let attempts = 0;
+    const maxAttempts = 240; // 240 * 15s = 60 minutes
+
+    const check = async () => {
+      if (attempts >= maxAttempts) {
+        updateCallItem(index, 'failed', 'Call timed out after 60 minutes.');
+        completedCount++;
+        checkAllDone();
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/call-status/${callId}`);
+        const data = await res.json();
+
+        if (data.status === 'completed' || data.status === 'ended' || data.completed === true) {
+          const summary = data.summary || '';
+          const wasVoicemail = data.answered_by === 'voicemail';
+          const callMin = data.call_length ? `${Math.round(data.call_length / 60 * 10) / 10} min` : '';
+
+          if (wasVoicemail) {
+            updateCallItem(index, 'voicemail',
+              `Reached voicemail - left a message.${callMin ? ' (' + callMin + ')' : ''}`);
+          } else {
+            updateCallItem(index, 'complete',
+              summary || 'Call completed - see transcript for details.' + (callMin ? ' (' + callMin + ')' : ''));
+          }
+
+          completedCount++;
+          checkAllDone();
+
+        } else if (data.status === 'failed' || data.status === 'error') {
+          updateCallItem(index, 'failed', 'Call failed - the office may not have answered.');
+          completedCount++;
+          checkAllDone();
+
+        } else {
+          // Still in progress
+          attempts++;
+          setTimeout(check, 15000);
+        }
+
+      } catch (err) {
+        attempts++;
+        setTimeout(check, 15000);
+      }
+    };
+
+    // First check after 10 seconds (give it time to connect)
+    setTimeout(check, 10000);
+  }
+
+  // --- RENDER CALL STATUS ITEMS -------------------------
+  function renderCallItem(index, doctorName, phone, status) {
+    const list = document.getElementById('call-list');
+    const li = document.createElement('li');
+    li.className = 'call-status-item';
+    li.id = `call-item-${index}`;
+    li.innerHTML = `
+      <div class="call-info">
+        <div class="call-doctor">${escapeHtml(doctorName)}</div>
+        <div class="call-phone">${escapeHtml(phone)}</div>
+        <div class="call-result" id="call-result-${index}"></div>
+      </div>
+      <span class="badge badge-calling" id="call-badge-${index}">&#x1F4DE; Calling&hellip;</span>
+    `;
+    list.appendChild(li);
+  }
+
+  function updateCallItem(index, status, message, feedback) {
+    const badge = document.getElementById(`call-badge-${index}`);
+    const result = document.getElementById(`call-result-${index}`);
+
+    if (badge) {
+      switch (status) {
+        case 'complete':
+          badge.className = 'badge badge-complete';
+          badge.innerHTML = '&#x2705; Complete';
+          break;
+        case 'failed':
+          badge.className = 'badge badge-failed';
+          badge.innerHTML = '&#x274C; Could Not Schedule';
+          break;
+        case 'voicemail':
+          badge.className = 'badge badge-voicemail';
+          badge.innerHTML = '&#x1F4EC; Voicemail';
+          break;
+      }
+    }
+
+    if (result && message) result.textContent = message;
+    if (feedback && item) {
+      const fb = document.createElement('div');
+      fb.className = 'call-feedback';
+      fb.innerHTML = '<strong>&#x26A0;&#xFE0F; Scheduling Issue:</strong> ' + feedback;
+      item.querySelector('.call-info').appendChild(fb);
+    }
+  }
+
+  // --- CHECK IF ALL CALLS ARE DONE ----------------------
+  function detectMissingInfo(text) {
+    if (!text) return null;
+    const t = text.toLowerCase();
+    const signals = [
+      { p: /date of birth|dob|birth date/, m: 'Date of birth was requested - ensure it is filled in.' },
+      { p: /insurance|member id|group number/, m: 'Insurance information was requested - consider adding Member ID or Group Number.' },
+      { p: /medical record|mrn|record number/, m: 'Medical Record Number (MRN) was requested - consider adding it.' },
+      { p: /referral/, m: 'A referral may be required before booking.' },
+      { p: /unable to schedule|could not schedule|cannot schedule|not able to book/, m: 'The scheduler was unable to book the appointment during this call.' },
+      { p: /call back|call us back|return our call/, m: 'The office asked for a direct callback.' },
+      { p: /prior authorization|pre-authorization/, m: 'Prior authorization may be required - check with your insurance.' },
+      { p: /not accept|doesn't accept|out of network/, m: 'The office may not accept this insurance.' }
+    ];
+    const found = signals.filter(s => s.p.test(t));
+    return found.length ? found.map(s => s.m).join(' ') : null;
+  }
+
+  function checkAllDone() {
+    if (completedCount >= activeCalls.length) {
+      // Update banner
+      document.getElementById('banner-title').textContent = 'All Calls Completed';
+      document.getElementById('banner-sub').textContent =
+        'Your scheduling session is finished. See results below.';
+
+      const dot = document.getElementById('pulse-dot');
+      dot.style.background = '#68d391';
+      dot.style.animation = 'none';
+
+      // Build results summary
+      const resultsDiv = document.getElementById('results-content');
+      let html = '';
+
+      activeCalls.forEach((call, i) => {
+        const badge = document.getElementById(`call-badge-${i}`);
+        const result = document.getElementById(`call-result-${i}`);
+        const isSuccess = badge && badge.classList.contains('badge-complete');
+        const isVoicemail = badge && badge.classList.contains('badge-voicemail');
+
+        html += `
+          <div class="result-entry">
+            <span class="result-name">${escapeHtml(call.doctorName)}</span>
+            <span class="result-phone">${escapeHtml(call.phone)}</span>
+            <div class="result-detail ${isSuccess ? 'result-success' : (isVoicemail ? 'result-success' : 'result-fail')}">
+              ${badge ? badge.textContent : ''} &mdash; ${result ? escapeHtml(result.textContent) : 'No details available.'}
+            </div>
+          </div>
+        `;
+      });
+
+      resultsDiv.innerHTML = html;
+      document.getElementById('results-section').style.display = 'block';
+    }
+  }
+
+  // --- ERROR HELPERS ------------------------------------
+  function showError(msg) {
+    const el = document.getElementById('error-banner');
+    el.textContent = msg;
+    el.style.display = 'block';
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function hideError() {
+    document.getElementById('error-banner').style.display = 'none';
+  }
+
+  function showStatusError(msg) {
+    const banner = document.getElementById('status-banner');
+    banner.style.background = 'linear-gradient(135deg, #8a2020 0%, #a03030 100%)';
+    document.getElementById('banner-title').textContent = 'Error';
+    document.getElementById('banner-sub').textContent = msg;
+    document.getElementById('pulse-dot').style.animation = 'none';
+    document.getElementById('pulse-dot').style.background = '#ff6060';
+  }
+</script>
+
+</body>
+</html>
