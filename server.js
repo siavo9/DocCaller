@@ -1,7 +1,7 @@
 const express = require('express');
 const fetch = require('node-fetch');
 const path = require('path');
-const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
+const { Resend } = require('resend');
 
 const app = express();
 
@@ -9,15 +9,10 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ CONFIG Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
-// Set BLAND_API_KEY, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY in your Vercel environment variables
+// Set BLAND_API_KEY and RESEND_API_KEY in your Vercel environment variables
 const BLAND_API_KEY = process.env.BLAND_API_KEY;
-const ses = new SESClient({
-  region: process.env.AWS_REGION || 'us-east-2',
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-  }
-});
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const resend = new Resend(RESEND_API_KEY);
 
 // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ HELPERS Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 
@@ -202,7 +197,7 @@ app.get('/api/call-status/:callId', async (req, res) => {
 // Send results email via Resend
 app.post('/api/send-results', async (req, res) => {
   try {
-    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+    if (!RESEND_API_KEY) {
       return res.status(500).json({ success: false, error: 'Email service not configured' });
     }
 
@@ -263,14 +258,12 @@ app.post('/api/send-results', async (req, res) => {
       </div>
     </div>`;
 
-    await ses.send(new SendEmailCommand({
-      Source: 'DocCaller <results@doccaller.app>',
-      Destination: { ToAddresses: [email] },
-      Message: {
-        Subject: { Data: 'Your DocCaller Appointment Results' },
-        Body: { Html: { Data: htmlBody } }
-      }
-    }));
+    await resend.emails.send({
+      from: 'DocCaller <results@doccaller.app>',
+      to: [email],
+      subject: 'Your DocCaller Appointment Results',
+      html: htmlBody
+    });
 
     res.json({ success: true });
 
