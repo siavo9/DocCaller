@@ -1784,6 +1784,7 @@
           return {
             doctorName: call.doctorName,
             phone: call.phone,
+            specialty: call.specialty || null,
             callId: call.callId || null,
             status: isComplete ? 'complete' : (isVoicemail ? 'voicemail' : 'failed'),
             details: result ? result.textContent : 'No details available.'

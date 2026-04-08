@@ -16,6 +16,108 @@ const resend = new Resend(RESEND_API_KEY);
 
 // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ HELPERS Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 
+// --- CALENDAR LINK HELPERS ---
+
+function parseAppointmentInfo(details) {
+  if (!details) return null;
+
+  const months = { jan:0,january:0,feb:1,february:1,mar:2,march:2,apr:3,april:3,may:4,jun:5,june:5,jul:6,july:6,aug:7,august:7,sep:8,september:8,oct:9,october:9,nov:10,november:10,dec:11,december:11 };
+
+  let date = null;
+  let location = null;
+  let specialty = null;
+
+  // Try structured format first: "APPOINTMENT CONFIRMED: May 15, 2026 at 2:30 PM at 123 Main St..."
+  const structured = details.match(/APPOINTMENT CONFIRMED:\s*(\w+\s+\d{1,2},?\s*\d{4})\s+at\s+(\d{1,2}:\d{2}\s*(?:AM|PM))\s+at\s+(.+?)\.?\s*(?:Doctor:|$)/i);
+  if (structured) {
+    const dateStr = structured[1] + ' ' + structured[2];
+    const parsed = new Date(dateStr);
+    if (!isNaN(parsed.getTime())) date = parsed;
+
+    location = structured[3].trim();
+    if (/telehealth|virtual/i.test(location)) location = 'Telehealth / Virtual Visit';
+
+    // Extract specialty
+    const specMatch = details.match(/Specialty:\s*([^.]+)/i);
+    if (specMatch) specialty = specMatch[1].trim();
+
+    return { date, location, specialty };
+  }
+
+  // Fallback: Try "Month Day [Year] at Time"
+  const p1 = details.match(/(\w+)\s+(\d{1,2})(?:st|nd|rd|th)?,?\s*(\d{4})?\s*(?:at|@)\s*(\d{1,2}):?(\d{2})?\s*(am|pm|a\.m\.|p\.m\.)/i);
+  if (p1) {
+    const mon = months[p1[1].toLowerCase()];
+    if (mon !== undefined) {
+      let hour = parseInt(p1[4]);
+      const min = parseInt(p1[5] || '0');
+      const ampm = p1[6].replace(/\./g, '').toLowerCase();
+      if (ampm === 'pm' && hour < 12) hour += 12;
+      if (ampm === 'am' && hour === 12) hour = 0;
+      const year = p1[3] ? parseInt(p1[3]) : new Date().getFullYear();
+      date = new Date(year, mon, parseInt(p1[2]), hour, min);
+    }
+  }
+
+  // Fallback: Try "MM/DD/YYYY time"
+  if (!date) {
+    const p2 = details.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})\s+(\d{1,2}):?(\d{2})?\s*(am|pm|a\.m\.|p\.m\.)/i);
+    if (p2) {
+      let hour = parseInt(p2[4]);
+      const min = parseInt(p2[5] || '0');
+      const ampm = p2[6].replace(/\./g, '').toLowerCase();
+      if (ampm === 'pm' && hour < 12) hour += 12;
+      if (ampm === 'am' && hour === 12) hour = 0;
+      const year = p2[3].length === 2 ? 2000 + parseInt(p2[3]) : parseInt(p2[3]);
+      date = new Date(year, parseInt(p2[1]) - 1, parseInt(p2[2]), hour, min);
+    }
+  }
+
+  if (!date) return null;
+  return { date, location, specialty };
+}
+
+function formatGoogleCalDate(date) {
+  // Format: YYYYMMDDTHHmmSS
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}${pad(date.getMonth()+1)}${pad(date.getDate())}T${pad(date.getHours())}${pad(date.getMinutes())}00`;
+}
+
+function buildGoogleCalLink(doctorName, apptDate, { specialty, location } = {}) {
+  const start = formatGoogleCalDate(apptDate);
+  const end = formatGoogleCalDate(new Date(apptDate.getTime() + 60 * 60 * 1000)); // 1 hour default
+  const titleParts = [doctorName];
+  if (specialty) titleParts.push(`(${specialty})`);
+  const title = encodeURIComponent(`Appointment - ${titleParts.join(' ')}`);
+  const details = encodeURIComponent(`Scheduled via DocCaller`);
+  const loc = location ? `&location=${encodeURIComponent(location)}` : '';
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}${loc}`;
+}
+
+function buildIcsContent(doctorName, apptDate, { specialty, location } = {}) {
+  const pad = (n) => String(n).padStart(2, '0');
+  const fmt = (d) => `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+  const start = fmt(apptDate);
+  const end = fmt(new Date(apptDate.getTime() + 60 * 60 * 1000));
+  const now = fmt(new Date());
+  const titleParts = [doctorName];
+  if (specialty) titleParts.push(`(${specialty})`);
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//DocCaller//EN',
+    'BEGIN:VEVENT',
+    `DTSTART:${start}`,
+    `DTEND:${end}`,
+    `DTSTAMP:${now}`,
+    `SUMMARY:Appointment - ${titleParts.join(' ')}`,
+    'DESCRIPTION:Scheduled via DocCaller'
+  ];
+  if (location) lines.push(`LOCATION:${location}`);
+  lines.push('END:VEVENT', 'END:VCALENDAR');
+  return lines.join('\r\n');
+}
+
 function normalizePhone(phone) {
   const digits = phone.replace(/\D/g, '');
   if (digits.length === 10) return `+1${digits}`;
@@ -74,7 +176,13 @@ YOUR INSTRUCTIONS:
 10. If you reach voicemail, leave a clear message: "Hello, I am calling to schedule an appointment for ${patient.name}. Please call back at ${patient.phone} to confirm the appointment. Thank you."
 
 IMPORTANT: Do NOT claim to be the patient. You are calling ON BEHALF of the patient as their scheduling assistant.
-IMPORTANT: When the appointment is confirmed, clearly state the date, time, and location so it is captured in the transcript.`;
+IMPORTANT: When the appointment is confirmed, clearly state the date, time, and location so it is captured in the transcript.
+
+CRITICAL - APPOINTMENT SUMMARY: Once the appointment is confirmed, you MUST end the call with a clear summary in this exact format:
+"APPOINTMENT CONFIRMED: [Month Day, Year] at [Time AM/PM] at [Full Address or 'Telehealth/Virtual Visit' if virtual]. Doctor: ${appt.name}${appt.specialty ? ', Specialty: ' + appt.specialty : ''}."
+Example: "APPOINTMENT CONFIRMED: May 15, 2026 at 2:30 PM at 123 Main St, Suite 200, New York, NY 10001. Doctor: Dr. Smith, Specialty: Cardiology."
+Example for virtual: "APPOINTMENT CONFIRMED: May 15, 2026 at 2:30 PM at Telehealth/Virtual Visit. Doctor: Dr. Smith, Specialty: Dermatology."
+This summary line is essential for our system to generate calendar links for the patient.`;
 }
 
 // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ ROUTES Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
@@ -145,6 +253,7 @@ app.post('/api/schedule', async (req, res) => {
         calls.push({
           callId: data.call_id,
           doctorName: appt.name,
+          specialty: appt.specialty || null,
           phone: appt.phone || phoneNumber || 'unknown',
           phoneLookedUp: appt.phoneLookedUp || false,
           phoneSource: appt.phoneSource || null
@@ -194,6 +303,22 @@ app.get('/api/call-status/:callId', async (req, res) => {
 });
 
 // Catch-all Ã¢ÂÂ serve index.html
+// Generate .ics file for Apple Calendar
+app.get('/api/calendar/ics', (req, res) => {
+  const { doctor, date, specialty, location } = req.query;
+  if (!doctor || !date) {
+    return res.status(400).send('Missing doctor or date');
+  }
+  const apptDate = new Date(date);
+  if (isNaN(apptDate.getTime())) {
+    return res.status(400).send('Invalid date');
+  }
+  const ics = buildIcsContent(doctor, apptDate, { specialty: specialty || null, location: location || null });
+  res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="appointment-${doctor.replace(/[^a-zA-Z0-9]/g, '_')}.ics"`);
+  res.send(ics);
+});
+
 // Send results email via Resend
 app.post('/api/send-results', async (req, res) => {
   try {
@@ -214,6 +339,24 @@ app.post('/api/send-results', async (req, res) => {
       const statusLabel = r.status === 'complete' ? 'Scheduled' : r.status === 'voicemail' ? 'Voicemail Left' : 'Could Not Schedule';
       const statusIcon = r.status === 'complete' ? '&#x2705;' : r.status === 'voicemail' ? '&#x1F4EC;' : '&#x274C;';
 
+      // Build calendar links if appointment was scheduled and we can parse a date
+      let calendarLinks = '';
+      if (r.status === 'complete' && r.details) {
+        const apptInfo = parseAppointmentInfo(r.details);
+        if (apptInfo && apptInfo.date) {
+          const calOpts = { specialty: apptInfo.specialty || r.specialty || null, location: apptInfo.location || null };
+          const googleUrl = buildGoogleCalLink(r.doctorName, apptInfo.date, calOpts);
+          let icsUrl = `https://doccaller.app/api/calendar/ics?doctor=${encodeURIComponent(r.doctorName)}&date=${encodeURIComponent(apptInfo.date.toISOString())}`;
+          if (calOpts.specialty) icsUrl += `&specialty=${encodeURIComponent(calOpts.specialty)}`;
+          if (calOpts.location) icsUrl += `&location=${encodeURIComponent(calOpts.location)}`;
+          calendarLinks = `
+            <div style="margin-top:8px;">
+              <a href="${googleUrl}" target="_blank" style="display:inline-block;padding:5px 12px;background:#4285f4;color:white;border-radius:4px;text-decoration:none;font-size:12px;font-weight:600;margin-right:6px;">+ Google Calendar</a>
+              <a href="${icsUrl}" style="display:inline-block;padding:5px 12px;background:#333;color:white;border-radius:4px;text-decoration:none;font-size:12px;font-weight:600;">+ Apple Calendar</a>
+            </div>`;
+        }
+      }
+
       resultsHtml += `
         <tr>
           <td style="padding:14px 18px;border-bottom:1px solid #e8f0f8;">
@@ -224,7 +367,7 @@ app.post('/api/send-results', async (req, res) => {
             <span style="color:${statusColor};font-weight:600;font-size:13px;">${statusIcon} ${statusLabel}</span>
           </td>
           <td style="padding:14px 18px;border-bottom:1px solid #e8f0f8;color:#2d4a6b;font-size:13px;">
-            ${r.details || 'No additional details.'}${r.callId ? '<br><a href="https://doccaller.app/transcript/' + r.callId + '" style="color:#4a90d9;text-decoration:underline;font-size:12px;">View transcript</a>' : ''}
+            ${r.details || 'No additional details.'}${r.callId ? '<br><a href="https://doccaller.app/transcript/' + r.callId + '" style="color:#4a90d9;text-decoration:underline;font-size:12px;">View transcript</a>' : ''}${calendarLinks}
           </td>
         </tr>`;
     });
