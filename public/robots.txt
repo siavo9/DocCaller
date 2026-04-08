@@ -1,0 +1,6 @@
+# DocCaller - robots.txt
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://www.doccaller.app/sitemap.xml
