@@ -347,8 +347,12 @@ app.post('/api/send-results', async (req, res) => {
 
       // Build calendar links if appointment was scheduled and we can parse a date
       let calendarLinks = '';
-      if (r.status === 'complete' && r.details) {
-        const apptInfo = parseAppointmentInfo(r.details);
+      if (r.status === 'complete' && (r.details || r.transcript)) {
+        // Try details first, then fall back to transcript for structured appointment info
+        let apptInfo = parseAppointmentInfo(r.details);
+        if (!apptInfo || !apptInfo.date) {
+          apptInfo = parseAppointmentInfo(r.transcript);
+        }
         if (apptInfo && apptInfo.date) {
           const calOpts = { specialty: apptInfo.specialty || r.specialty || null, location: apptInfo.location || null };
           const googleUrl = buildGoogleCalLink(r.doctorName, apptInfo.date, calOpts);
@@ -363,6 +367,45 @@ app.post('/api/send-results', async (req, res) => {
         }
       }
 
+      // Build structured appointment details for confirmed appointments
+      let appointmentDetailsHtml = '';
+      if (r.status === 'complete' && (r.details || r.transcript)) {
+        // Try details first, then fall back to transcript
+        let apptParsed = parseAppointmentInfo(r.details);
+        if (!apptParsed || !apptParsed.date) {
+          apptParsed = parseAppointmentInfo(r.transcript);
+        }
+        const doctorSpecialty = r.specialty || (apptParsed && apptParsed.specialty) || null;
+        const apptLocation = (apptParsed && apptParsed.location) || null;
+        const apptDate = (apptParsed && apptParsed.date) || null;
+
+        appointmentDetailsHtml = '<div style="margin-top:8px;padding:10px 14px;background:#f0faf4;border-left:3px solid #10b981;border-radius:4px;">';
+        if (apptDate) {
+          appointmentDetailsHtml += `<div style="margin-bottom:4px;"><strong style="color:#1a3a5c;">&#x1F4C5; Date:</strong> <span style="color:#2d4a6b;">${apptDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</span></div>`;
+          appointmentDetailsHtml += `<div style="margin-bottom:4px;"><strong style="color:#1a3a5c;">&#x1F552; Time:</strong> <span style="color:#2d4a6b;">${apptDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</span></div>`;
+        }
+        appointmentDetailsHtml += `<div style="margin-bottom:4px;"><strong style="color:#1a3a5c;">&#x1F9D1;&#x200D;&#x2695;&#xFE0F; Physician:</strong> <span style="color:#2d4a6b;">${r.doctorName}</span></div>`;
+        if (doctorSpecialty) {
+          appointmentDetailsHtml += `<div style="margin-bottom:4px;"><strong style="color:#1a3a5c;">&#x1FA7A; Specialty:</strong> <span style="color:#2d4a6b;">${doctorSpecialty}</span></div>`;
+        }
+        if (apptLocation) {
+          appointmentDetailsHtml += `<div style="margin-bottom:4px;"><strong style="color:#1a3a5c;">&#x1F4CD; Address:</strong> <span style="color:#2d4a6b;">${apptLocation}</span></div>`;
+        }
+        // Include calendar links inside the appointment card
+        if (calendarLinks) {
+          appointmentDetailsHtml += calendarLinks;
+          calendarLinks = ''; // Don't duplicate below
+        }
+        appointmentDetailsHtml += '</div>';
+
+        if (!apptDate) {
+          // If we couldn't parse date/time, fall back to showing raw details
+          appointmentDetailsHtml = `<div style="margin-top:6px;color:#2d4a6b;font-size:13px;">${r.details}</div>`;
+        }
+      } else {
+        appointmentDetailsHtml = `<div style="margin-top:6px;color:#2d4a6b;font-size:13px;">${r.details || 'No additional details.'}</div>`;
+      }
+
       resultsHtml += `
         <tr>
           <td style="padding:14px 18px;border-bottom:1px solid #e8f0f8;">
@@ -373,7 +416,7 @@ app.post('/api/send-results', async (req, res) => {
             <span style="color:${statusColor};font-weight:600;font-size:13px;">${statusIcon} ${statusLabel}</span>
           </td>
           <td style="padding:14px 18px;border-bottom:1px solid #e8f0f8;color:#2d4a6b;font-size:13px;">
-            ${r.details || 'No additional details.'}${r.callId ? '<br><a href="https://doccaller.app/transcript/' + r.callId + '" style="color:#4a90d9;text-decoration:underline;font-size:12px;">View transcript</a>' : ''}${calendarLinks}
+            ${appointmentDetailsHtml}${r.callId ? '<br><a href="https://doccaller.app/transcript/' + r.callId + '" style="color:#4a90d9;text-decoration:underline;font-size:12px;">View transcript</a>' : ''}${calendarLinks}
           </td>
         </tr>`;
     });

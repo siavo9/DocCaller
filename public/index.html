@@ -1625,6 +1625,11 @@
           const wasVoicemail = data.answered_by === 'voicemail';
           const callMin = data.call_length ? `${Math.round(data.call_length / 60 * 10) / 10} min` : '';
 
+          // Store transcript on the active call for email use
+          if (activeCalls[index]) {
+            activeCalls[index].transcript = data.transcript || '';
+          }
+
           if (wasVoicemail) {
             updateCallItem(index, 'voicemail',
               `Reached voicemail - left a message.${callMin ? ' (' + callMin + ')' : ''}`,
@@ -1789,7 +1794,8 @@
             specialty: call.specialty || null,
             callId: call.callId || null,
             status: isComplete ? 'complete' : (isVoicemail ? 'voicemail' : 'failed'),
-            details: result ? result.textContent : 'No details available.'
+            details: result ? result.textContent : 'No details available.',
+            transcript: call.transcript || null
           };
         });
 
