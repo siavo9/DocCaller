@@ -459,6 +459,7 @@ app.post('/api/send-results', async (req, res) => {
 
     // Send SMS if Twilio is configured and patient phone provided
     let smsSent = false;
+    console.log('SMS Debug: twilio client exists:', !!twilio, '| TWILIO_PHONE_NUMBER:', !!TWILIO_PHONE_NUMBER, '| patientPhone:', patientPhone || '(empty)');
     if (twilio && TWILIO_PHONE_NUMBER && patientPhone) {
       try {
         // Build a concise text message with results
@@ -485,14 +486,16 @@ app.post('/api/send-results', async (req, res) => {
           toPhone = '+1' + toPhone; // Default to US
         }
 
-        await twilio.messages.create({
+        console.log('SMS Debug: Sending to', toPhone, 'from', TWILIO_PHONE_NUMBER);
+        const msg = await twilio.messages.create({
           body: smsBody,
           from: TWILIO_PHONE_NUMBER,
           to: toPhone
         });
+        console.log('SMS Debug: Message sent, SID:', msg.sid);
         smsSent = true;
       } catch (smsError) {
-        console.error('SMS send error:', smsError);
+        console.error('SMS send error:', smsError.message || smsError);
         // Don't fail the whole request if SMS fails — email was already sent
       }
     }
