@@ -1353,6 +1353,7 @@
   let promoApplied = false;
   let patientEmail = '';
   let patientName = '';
+  let patientPhone = '';
 
   // --- RENDER APPOINTMENT ENTRIES -------------------------
   function renderAppointments() {
@@ -1497,6 +1498,7 @@
       // Bypass Stripe - go directly to call flow
       patientEmail = formData.patient.email;
       patientName = formData.patient.name;
+      patientPhone = formData.patient.phone;
       document.getElementById('form-section').style.display = 'none';
       document.getElementById('status-section').style.display = 'block';
       formData.appointments.forEach(function(appt, i) {
@@ -1797,13 +1799,18 @@
           body: JSON.stringify({
             email: patientEmail,
             patientName: patientName,
+            patientPhone: patientPhone,
             results: emailResults
           })
         }).then(r => r.json()).then(data => {
           if (data.success) {
+            let noteText = 'Results have been emailed to ' + patientEmail;
+            if (data.smsSent) {
+              noteText += ' and texted to ' + patientPhone;
+            }
             const emailNote = document.createElement('p');
             emailNote.style.cssText = 'text-align:center;color:#047857;font-size:14px;margin-top:16px;font-weight:600;';
-            emailNote.textContent = 'Results have been emailed to ' + patientEmail;
+            emailNote.textContent = noteText;
             document.querySelector('.results-card').appendChild(emailNote);
           }
         }).catch(() => {});
