@@ -1635,10 +1635,19 @@
               `Reached voicemail - left a message.${callMin ? ' (' + callMin + ')' : ''}`,
               null, callId);
           } else {
-            const msg = summary
-              ? summary + (callMin ? ' (' + callMin + ')' : '')
-              : 'Call completed' + (callMin ? ' (' + callMin + ')' : '');
-            updateCallItem(index, 'complete', msg, null, callId);
+            // Check if an appointment was actually confirmed in the transcript
+            const transcript = data.transcript || '';
+            const appointmentConfirmed = /APPOINTMENT CONFIRMED/i.test(transcript);
+
+            if (appointmentConfirmed) {
+              const msg = summary
+                ? summary + (callMin ? ' (' + callMin + ')' : '')
+                : 'Call completed' + (callMin ? ' (' + callMin + ')' : '');
+              updateCallItem(index, 'complete', msg, null, callId);
+            } else {
+              const msg = 'Call ended before appointment could be scheduled.' + (callMin ? ' (' + callMin + ')' : '');
+              updateCallItem(index, 'not_scheduled', msg, null, callId);
+            }
           }
 
           completedCount++;
@@ -1705,6 +1714,10 @@
         case 'voicemail':
           badge.className = 'badge badge-voicemail';
           badge.innerHTML = '&#x1F4EC; Voicemail';
+          break;
+        case 'not_scheduled':
+          badge.className = 'badge badge-failed';
+          badge.innerHTML = '&#x26A0;&#xFE0F; Call Disconnected';
           break;
       }
     }
@@ -1788,12 +1801,14 @@
           const result = document.getElementById(`call-result-${i}`);
           const isComplete = badge && badge.classList.contains('badge-complete');
           const isVoicemail = badge && badge.classList.contains('badge-voicemail');
+          const badgeText = badge ? badge.textContent : '';
+          const isNotScheduled = badgeText.includes('Disconnected');
           return {
             doctorName: call.doctorName,
             phone: call.phone,
             specialty: call.specialty || null,
             callId: call.callId || null,
-            status: isComplete ? 'complete' : (isVoicemail ? 'voicemail' : 'failed'),
+            status: isComplete ? 'complete' : isVoicemail ? 'voicemail' : isNotScheduled ? 'not_scheduled' : 'failed',
             details: result ? result.textContent : 'No details available.',
             transcript: call.transcript || null
           };

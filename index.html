@@ -541,6 +541,41 @@
       display: none;
     }
 
+    /* --- HIPAA DISCLAIMER ------------------------------ */
+    .hipaa-disclaimer {
+      max-width: 800px;
+      margin: 32px auto 0;
+      padding: 24px 28px;
+      background: #fff8f0;
+      border: 1px solid #e8d5b8;
+      border-radius: 10px;
+      font-size: 12px;
+      color: #5a4a3a;
+      line-height: 1.7;
+    }
+
+    .hipaa-disclaimer h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #8a5a1a;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hipaa-disclaimer p {
+      margin-bottom: 10px;
+    }
+
+    .hipaa-disclaimer p:last-child {
+      margin-bottom: 0;
+    }
+
+    .hipaa-disclaimer strong {
+      color: #6a4210;
+    }
+
     /* --- FOOTER ---------------------------------------- */
     footer {
       text-align: center;
@@ -651,7 +686,7 @@
     <div class="consent-box">
       <input type="checkbox" id="consent-check">
       <div class="consent-text">
-        <strong>Patient Consent Required:</strong> Do you have the patient's permission to share their personal and insurance information with DocCaller for scheduling purposes? By checking this box, you confirm that you have obtained the patient's explicit consent to share their information with our service and the medical offices being called.
+        <strong>Patient Consent &amp; HIPAA Acknowledgment Required:</strong> By checking this box, you confirm that: (1) you have obtained the patient's explicit consent to share their personal and insurance information with DocCaller for scheduling purposes; (2) you understand that DocCaller is <strong>not HIPAA-compliant</strong> and does not guarantee the security of protected health information (PHI) under HIPAA standards; and (3) you accept full responsibility for any information submitted and agree to the terms outlined in the Legal Disclaimer below.
       </div>
     </div>
 
@@ -696,9 +731,22 @@
 
 </div>
 
+<div class="hipaa-disclaimer">
+  <h3>&#x26A0;&#xFE0F; Important Legal Disclaimer</h3>
+  <p><strong>HIPAA Compliance Notice:</strong> DocCaller is <strong>not</strong> a HIPAA-covered entity and does not claim compliance with the Health Insurance Portability and Accountability Act of 1996 (HIPAA) or its implementing regulations, including the HIPAA Privacy Rule (45 CFR Part 160 and Subparts A and E of Part 164) and the HIPAA Security Rule (45 CFR Part 160 and Subparts A and C of Part 164). DocCaller does not enter into Business Associate Agreements (BAAs) with users or healthcare providers.</p>
+  <p><strong>User Responsibility:</strong> By using this service, you acknowledge and agree that <strong>you are solely responsible</strong> for any protected health information (PHI) or personally identifiable information (PII) that you voluntarily submit through this platform. You represent that you have obtained all necessary patient authorizations and consents prior to submitting any patient information. DocCaller acts solely as a scheduling intermediary and does not access, maintain, or store PHI in compliance with HIPAA standards.</p>
+  <p><strong>Assumption of Risk &amp; Limitation of Liability:</strong> You expressly assume all risks associated with transmitting personal or health-related information through this service. To the fullest extent permitted by applicable law, DocCaller, its owners, officers, employees, and affiliates shall not be held liable for any unauthorized access, disclosure, loss, or misuse of any information you provide, including but not limited to any claims arising under HIPAA, state privacy laws, or common law theories of negligence or breach of confidentiality.</p>
+  <p><strong>No Medical Services:</strong> DocCaller does not provide medical advice, diagnosis, or treatment. This service is limited to facilitating appointment scheduling on behalf of the user.</p>
+  <p>By using DocCaller, you confirm that you have read, understood, and agree to this disclaimer. If you do not agree, please do not use this service.</p>
+</div>
+
 <footer>
-  DocCaller &middot; AI-powered appointment scheduling &middot; Not a licensed medical service<br>
-  Patient information is not stored and is only used during the scheduling call.
+  <div style="margin-bottom:14px;">
+    <a href="https://theresanaiforthat.com/ai/doccaller/?ref=featured&v=10005933" target="_blank" rel="nofollow"><img width="300" src="https://media.theresanaiforthat.com/featured-on-taaft.png?width=600" alt="Featured on There's an AI for That"></a>
+  </div>
+  &copy; 2026 DocCaller &middot; AI-powered appointment scheduling &middot; Not a HIPAA-covered entity<br>
+  Use of this service constitutes acceptance of our privacy disclaimer above.<br><br>
+  Questions, concerns, or feedback? Email us at <a href="mailto:doccallerai@gmail.com" style="color:#3a6a9a;text-decoration:underline;">doccallerai@gmail.com</a>
 </footer>
 
 <!-- ----------------------------------------

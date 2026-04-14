@@ -18,6 +18,7 @@ const resend = new Resend(RESEND_API_KEY);
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER;
+const TWILIO_MESSAGING_SERVICE_SID = process.env.TWILIO_MESSAGING_SERVICE_SID;
 const twilio = (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN) ? require('twilio')(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN) : null;
 
 // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ HELPERS Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
@@ -341,9 +342,9 @@ app.post('/api/send-results', async (req, res) => {
     // Build the email HTML
     let resultsHtml = '';
     results.forEach((r) => {
-      const statusColor = r.status === 'complete' ? '#1a6620' : r.status === 'voicemail' ? '#5a3a8a' : '#a03030';
-      const statusLabel = r.status === 'complete' ? 'Scheduled' : r.status === 'voicemail' ? 'Voicemail Left' : 'Could Not Schedule';
-      const statusIcon = r.status === 'complete' ? '&#x2705;' : r.status === 'voicemail' ? '&#x1F4EC;' : '&#x274C;';
+      const statusColor = r.status === 'complete' ? '#1a6620' : r.status === 'voicemail' ? '#5a3a8a' : r.status === 'not_scheduled' ? '#b45309' : '#a03030';
+      const statusLabel = r.status === 'complete' ? 'Scheduled' : r.status === 'voicemail' ? 'Voicemail Left' : r.status === 'not_scheduled' ? 'Call Disconnected' : 'Could Not Schedule';
+      const statusIcon = r.status === 'complete' ? '&#x2705;' : r.status === 'voicemail' ? '&#x1F4EC;' : r.status === 'not_scheduled' ? '&#x26A0;&#xFE0F;' : '&#x274C;';
 
       // Build calendar links if appointment was scheduled and we can parse a date
       let calendarLinks = '';
@@ -459,8 +460,9 @@ app.post('/api/send-results', async (req, res) => {
 
     // Send SMS if Twilio is configured and patient phone provided
     let smsSent = false;
-    console.log('SMS Debug: twilio client exists:', !!twilio, '| TWILIO_PHONE_NUMBER:', !!TWILIO_PHONE_NUMBER, '| patientPhone:', patientPhone || '(empty)');
-    if (twilio && TWILIO_PHONE_NUMBER && patientPhone) {
+    const hasSmsConfig = !!(TWILIO_MESSAGING_SERVICE_SID || TWILIO_PHONE_NUMBER);
+    console.log('SMS Debug: twilio client exists:', !!twilio, '| messagingServiceSid:', !!TWILIO_MESSAGING_SERVICE_SID, '| phoneNumber:', !!TWILIO_PHONE_NUMBER, '| patientPhone:', patientPhone || '(empty)');
+    if (twilio && hasSmsConfig && patientPhone) {
       try {
         // Build a concise text message with results
         let smsBody = `DocCaller Results for ${patientName || 'your appointments'}:\n\n`;
@@ -486,12 +488,14 @@ app.post('/api/send-results', async (req, res) => {
           toPhone = '+1' + toPhone; // Default to US
         }
 
-        console.log('SMS Debug: Sending to', toPhone, 'from', TWILIO_PHONE_NUMBER);
-        const msg = await twilio.messages.create({
-          body: smsBody,
-          from: TWILIO_PHONE_NUMBER,
-          to: toPhone
-        });
+        const smsParams = { body: smsBody, to: toPhone };
+        if (TWILIO_MESSAGING_SERVICE_SID) {
+          smsParams.messagingServiceSid = TWILIO_MESSAGING_SERVICE_SID;
+        } else {
+          smsParams.from = TWILIO_PHONE_NUMBER;
+        }
+        console.log('SMS Debug: Sending to', toPhone, 'via', TWILIO_MESSAGING_SERVICE_SID ? 'MessagingService' : TWILIO_PHONE_NUMBER);
+        const msg = await twilio.messages.create(smsParams);
         console.log('SMS Debug: Message sent, SID:', msg.sid);
         smsSent = true;
       } catch (smsError) {
