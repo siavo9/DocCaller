@@ -2,6 +2,7 @@ const express = require('express');
 const fetch = require('node-fetch');
 const path = require('path');
 const { Resend } = require('resend');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 
@@ -12,7 +13,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Set BLAND_API_KEY and RESEND_API_KEY in your Vercel environment variables
 const BLAND_API_KEY = process.env.BLAND_API_KEY;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const CRON_SECRET = process.env.CRON_SECRET || '';
 const resend = new Resend(RESEND_API_KEY);
+
+// Supabase
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabase = (SUPABASE_URL && SUPABASE_SERVICE_KEY)
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+  : null;
 
 // --- TIMEZONE & BUSINESS HOURS ---
 
@@ -322,14 +331,14 @@ app.post('/api/next-window', (req, res) => {
   });
 });
 
-// Trigger Bland.ai calls for all appointments
+// Queue appointments for scheduling (saves to Supabase)
 app.post('/api/schedule', async (req, res) => {
   try {
-    if (!BLAND_API_KEY) {
-      return res.status(500).json({ success: false, error: 'Server misconfigured: missing API key' });
+    if (!supabase) {
+      return res.status(500).json({ success: false, error: 'Server misconfigured: missing database config' });
     }
 
-    const { patient, appointments } = req.body;
+    const { patient, appointments, requestedCallTime } = req.body;
 
     if (!patient || !patient.name || !patient.dob || !patient.phone || !patient.insurance) {
       return res.status(400).json({ success: false, error: 'Missing required patient information' });
@@ -339,97 +348,356 @@ app.post('/api/schedule', async (req, res) => {
       return res.status(400).json({ success: false, error: 'No appointments provided' });
     }
 
-    // Server-side business hours guard
-    // Extract patient state from address
+    // Determine timezone
     const addrParts = (patient.address || '').split(/[\s,]+/);
     let patientStateCode = '';
     for (const p of addrParts) {
       if (STATE_TIMEZONES[p.toUpperCase()]) { patientStateCode = p.toUpperCase(); break; }
     }
-    // Check if ANY appointment is outside business hours
-    for (const appt of appointments) {
-      const tz = getTimezone(appt.state, patientStateCode);
-      if (!isBusinessHours(tz)) {
-        const nextWin = getNextBusinessWindow(tz);
-        return res.status(400).json({
-          success: false,
-          error: 'Outside business hours. Calls can only be made 9 AM–12 PM and 1 PM–4 PM, Mon–Fri.',
-          nextWindow: nextWin
-        });
-      }
+    // Use first appointment's state, fall back to patient, fall back to Eastern
+    const primaryState = appointments[0].state || patientStateCode || '';
+    const tz = getTimezone(primaryState, patientStateCode);
+
+    // Calculate scheduled_for time
+    let scheduledFor;
+    if (requestedCallTime && requestedCallTime.dateTime && requestedCallTime.timezone) {
+      // User requested a specific call time
+      // Convert the user's requested local time to UTC
+      const reqTz = requestedCallTime.timezone;
+      const reqDt = new Date(requestedCallTime.dateTime);
+      // requestedCallTime.dateTime is already an ISO string with the user's intended UTC time
+      scheduledFor = reqDt.toISOString();
+    } else {
+      // Default: next available business hours window
+      const window = getNextBusinessWindow(tz);
+      scheduledFor = window.nextWindowUTC;
     }
 
-    const calls = [];
+    // Save to Supabase
+    const { data, error } = await supabase
+      .from('scheduled_sessions')
+      .insert({
+        patient: patient,
+        patient_email: patient.email,
+        patient_name: patient.name,
+        appointments: appointments.slice(0, 3),
+        scheduled_for: scheduledFor,
+        timezone: tz,
+        status: 'pending',
+        calls: null,
+        email_sent: false
+      })
+      .select('id, scheduled_for, timezone, status')
+      .single();
 
-    for (const appt of appointments.slice(0, 3)) {
-      let phoneNumber = appt.phone ? normalizePhone(appt.phone) : null;
-
-      // If no phone number provided, try web search
-      if (!phoneNumber || phoneNumber === '+') {
-        const lookup = await lookupPhone(appt.name, appt.specialty);
-        if (lookup) {
-          phoneNumber = normalizePhone(lookup.phone);
-          appt.phoneLookedUp = true;
-          appt.phoneSource = lookup.source;
-        } else {
-          calls.push({
-            callId: null,
-            doctorName: appt.name,
-            phone: 'Not found',
-            error: 'Could not find a phone number for "' + appt.name + '". Please enter the number manually.'
-          });
-          continue;
-        }
-      }
-
-      const task = buildTask(patient, appt);
-
-      const response = await fetch('https://api.bland.ai/v1/calls', {
-        method: 'POST',
-        headers: {
-          'authorization': BLAND_API_KEY,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          phone_number: phoneNumber,
-          task,
-          voice: 'june',
-          max_duration: 60,
-          wait_for_greeting: true,
-          record: false,
-          amd: true,
-          language: 'en'
-        })
-      });
-
-      const data = await response.json();
-
-      if (data.call_id) {
-        calls.push({
-          callId: data.call_id,
-          doctorName: appt.name,
-          specialty: appt.specialty || null,
-          phone: appt.phone || phoneNumber || 'unknown',
-          phoneLookedUp: appt.phoneLookedUp || false,
-          phoneSource: appt.phoneSource || null
-        });
-      } else {
-        calls.push({
-          callId: null,
-          doctorName: appt.name,
-          phone: appt.phone,
-          error: data.message || 'Failed to initiate call'
-        });
-      }
+    if (error) {
+      console.error('Supabase insert error:', error);
+      return res.status(500).json({ success: false, error: 'Failed to queue appointments.' });
     }
 
-    res.json({ success: true, calls });
+    // Format the scheduled time for display
+    const scheduledDate = new Date(data.scheduled_for);
+    const displayTime = scheduledDate.toLocaleString('en-US', {
+      timeZone: tz,
+      weekday: 'short', month: 'short', day: 'numeric',
+      hour: 'numeric', minute: '2-digit', hour12: true
+    });
+
+    res.json({
+      success: true,
+      sessionId: data.id,
+      scheduledFor: data.scheduled_for,
+      scheduledForDisplay: displayTime,
+      timezone: tz,
+      status: 'pending'
+    });
 
   } catch (error) {
     console.error('Schedule error:', error);
-    res.status(500).json({ success: false, error: 'Failed to initiate calls. Please try again.' });
+    res.status(500).json({ success: false, error: 'Failed to queue appointments. Please try again.' });
   }
 });
+
+// Get session status (for frontend polling)
+app.get('/api/session-status/:sessionId', async (req, res) => {
+  try {
+    if (!supabase) return res.status(500).json({ error: 'Database not configured' });
+
+    const { sessionId } = req.params;
+    const { data, error } = await supabase
+      .from('scheduled_sessions')
+      .select('id, status, scheduled_for, timezone, calls, email_sent, created_at, updated_at')
+      .eq('id', sessionId)
+      .single();
+
+    if (error || !data) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    // Calculate display time
+    const displayTime = new Date(data.scheduled_for).toLocaleString('en-US', {
+      timeZone: data.timezone,
+      weekday: 'short', month: 'short', day: 'numeric',
+      hour: 'numeric', minute: '2-digit', hour12: true
+    });
+
+    res.json({
+      ...data,
+      scheduledForDisplay: displayTime
+    });
+  } catch (err) {
+    console.error('Session status error:', err);
+    res.status(500).json({ error: 'Failed to check session status' });
+  }
+});
+
+// --- CRON: Process scheduled calls (runs every 5 minutes via Vercel cron) ---
+app.get('/api/cron/process-calls', async (req, res) => {
+  // Verify cron secret (Vercel sends this header)
+  const authHeader = req.headers['authorization'];
+  if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  if (!supabase || !BLAND_API_KEY) {
+    return res.status(500).json({ error: 'Server misconfigured' });
+  }
+
+  try {
+    const now = new Date().toISOString();
+    let processed = 0;
+
+    // --- STEP 1: Pick up PENDING sessions whose scheduled_for has arrived ---
+    const { data: pendingSessions, error: pendingErr } = await supabase
+      .from('scheduled_sessions')
+      .select('*')
+      .eq('status', 'pending')
+      .lte('scheduled_for', now)
+      .limit(10);
+
+    if (pendingErr) {
+      console.error('Cron: error fetching pending sessions:', pendingErr);
+    }
+
+    for (const session of (pendingSessions || [])) {
+      console.log('Cron: processing session', session.id);
+      const calls = [];
+
+      for (const appt of (session.appointments || []).slice(0, 3)) {
+        let phoneNumber = appt.phone ? normalizePhone(appt.phone) : null;
+
+        // Look up phone if not provided
+        if (!phoneNumber || phoneNumber === '+') {
+          const lookup = await lookupPhone(appt.name, appt.specialty);
+          if (lookup) {
+            phoneNumber = normalizePhone(lookup.phone);
+          } else {
+            calls.push({
+              callId: null,
+              doctorName: appt.name,
+              phone: 'Not found',
+              status: 'failed',
+              error: 'Could not find phone number for "' + appt.name + '".'
+            });
+            continue;
+          }
+        }
+
+        const task = buildTask(session.patient, appt);
+
+        try {
+          const response = await fetch('https://api.bland.ai/v1/calls', {
+            method: 'POST',
+            headers: {
+              'authorization': BLAND_API_KEY,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              phone_number: phoneNumber,
+              task,
+              voice: 'june',
+              max_duration: 60,
+              wait_for_greeting: true,
+              record: false,
+              amd: true,
+              language: 'en'
+            })
+          });
+          const callData = await response.json();
+
+          if (callData.call_id) {
+            calls.push({
+              callId: callData.call_id,
+              doctorName: appt.name,
+              specialty: appt.specialty || null,
+              phone: appt.phone || phoneNumber || 'unknown',
+              status: 'in_progress'
+            });
+          } else {
+            calls.push({
+              callId: null,
+              doctorName: appt.name,
+              phone: appt.phone || 'unknown',
+              status: 'failed',
+              error: callData.message || 'Failed to initiate call'
+            });
+          }
+        } catch (callErr) {
+          calls.push({
+            callId: null,
+            doctorName: appt.name,
+            phone: appt.phone || 'unknown',
+            status: 'failed',
+            error: 'Network error initiating call'
+          });
+        }
+      }
+
+      // Update session to 'calling' with call IDs
+      await supabase
+        .from('scheduled_sessions')
+        .update({ status: 'calling', calls })
+        .eq('id', session.id);
+
+      processed++;
+    }
+
+    // --- STEP 2: Check CALLING sessions for completed calls ---
+    const { data: callingSessions, error: callingErr } = await supabase
+      .from('scheduled_sessions')
+      .select('*')
+      .eq('status', 'calling')
+      .limit(20);
+
+    if (callingErr) {
+      console.error('Cron: error fetching calling sessions:', callingErr);
+    }
+
+    for (const session of (callingSessions || [])) {
+      const calls = session.calls || [];
+      let allDone = true;
+
+      for (let i = 0; i < calls.length; i++) {
+        const call = calls[i];
+        if (call.status !== 'in_progress' || !call.callId) continue;
+
+        try {
+          const statusRes = await fetch(`https://api.bland.ai/v1/calls/${call.callId}`, {
+            headers: { 'authorization': BLAND_API_KEY }
+          });
+          const statusData = await statusRes.json();
+
+          if (statusData.status === 'completed' || statusData.status === 'ended' || statusData.completed === true) {
+            const summary = statusData.summary || '';
+            const transcript = statusData.concatenated_transcript || '';
+            const wasVoicemail = statusData.answered_by === 'voicemail';
+            const scheduled = /scheduled|confirmed|booked|appointment.*set/i.test(summary + ' ' + transcript);
+
+            calls[i].status = scheduled ? 'complete' : wasVoicemail ? 'voicemail' : 'not_scheduled';
+            calls[i].details = summary;
+            calls[i].transcript = transcript;
+            calls[i].callLength = statusData.call_length || null;
+          } else {
+            allDone = false;
+          }
+        } catch (pollErr) {
+          console.error('Cron: error polling call', call.callId, pollErr.message);
+          allDone = false;
+        }
+      }
+
+      // Update calls in DB
+      const updateData = { calls };
+      if (allDone) {
+        updateData.status = 'completed';
+      }
+      await supabase
+        .from('scheduled_sessions')
+        .update(updateData)
+        .eq('id', session.id);
+
+      // If all done and email not sent, send results email
+      if (allDone && !session.email_sent && session.patient_email) {
+        try {
+          await sendResultsEmail(session.patient_email, session.patient_name, calls);
+          await supabase
+            .from('scheduled_sessions')
+            .update({ email_sent: true })
+            .eq('id', session.id);
+        } catch (emailErr) {
+          console.error('Cron: email send error for session', session.id, emailErr.message);
+        }
+      }
+
+      processed++;
+    }
+
+    res.json({ success: true, processed });
+  } catch (err) {
+    console.error('Cron error:', err);
+    res.status(500).json({ error: 'Cron processing failed' });
+  }
+});
+
+// --- Send results email (extracted for reuse by cron) ---
+async function sendResultsEmail(email, patientName, calls) {
+  if (!RESEND_API_KEY) throw new Error('Email service not configured');
+
+  let resultsHtml = '';
+  calls.forEach((r) => {
+    const statusColor = r.status === 'complete' ? '#1a6620' : r.status === 'voicemail' ? '#5a3a8a' : r.status === 'not_scheduled' ? '#b45309' : '#a03030';
+    const statusLabel = r.status === 'complete' ? 'Scheduled' : r.status === 'voicemail' ? 'Voicemail Left' : r.status === 'not_scheduled' ? 'Call Disconnected' : 'Could Not Schedule';
+    const statusIcon = r.status === 'complete' ? '&#x2705;' : r.status === 'voicemail' ? '&#x1F4EC;' : r.status === 'not_scheduled' ? '&#x26A0;&#xFE0F;' : '&#x274C;';
+
+    let calendarLinks = '';
+    if (r.status === 'complete' && (r.details || r.transcript)) {
+      let apptInfo = parseAppointmentInfo(r.details);
+      if (!apptInfo || !apptInfo.date) apptInfo = parseAppointmentInfo(r.transcript);
+      if (apptInfo && apptInfo.date) {
+        const calOpts = { specialty: apptInfo.specialty || r.specialty || null, location: apptInfo.location || null };
+        const googleUrl = buildGoogleCalLink(r.doctorName, apptInfo.date, calOpts);
+        let icsUrl = `https://doccaller.app/api/calendar/ics?doctor=${encodeURIComponent(r.doctorName)}&date=${encodeURIComponent(apptInfo.date.toISOString())}`;
+        if (calOpts.specialty) icsUrl += `&specialty=${encodeURIComponent(calOpts.specialty)}`;
+        if (calOpts.location) icsUrl += `&location=${encodeURIComponent(calOpts.location)}`;
+        calendarLinks = `<div style="margin-top:8px;"><a href="${googleUrl}" target="_blank" style="display:inline-block;padding:5px 12px;background:#4285f4;color:white;border-radius:4px;text-decoration:none;font-size:12px;font-weight:600;margin-right:6px;">+ Google Calendar</a><a href="${icsUrl}" style="display:inline-block;padding:5px 12px;background:#333;color:white;border-radius:4px;text-decoration:none;font-size:12px;font-weight:600;">+ Apple Calendar</a></div>`;
+      }
+    }
+
+    let appointmentDetailsHtml = '';
+    if (r.status === 'complete' && (r.details || r.transcript)) {
+      let apptParsed = parseAppointmentInfo(r.details);
+      if (!apptParsed || !apptParsed.date) apptParsed = parseAppointmentInfo(r.transcript);
+      const doctorSpecialty = r.specialty || (apptParsed && apptParsed.specialty) || null;
+      const apptLocation = (apptParsed && apptParsed.location) || null;
+      const apptDate = (apptParsed && apptParsed.date) || null;
+
+      appointmentDetailsHtml = '<div style="margin-top:8px;padding:10px 14px;background:#f0faf4;border-left:3px solid #10b981;border-radius:4px;">';
+      if (apptDate) {
+        appointmentDetailsHtml += `<div style="margin-bottom:4px;"><strong style="color:#1a3a5c;">&#x1F4C5; Date:</strong> <span style="color:#2d4a6b;">${apptDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</span></div>`;
+        appointmentDetailsHtml += `<div style="margin-bottom:4px;"><strong style="color:#1a3a5c;">&#x1F552; Time:</strong> <span style="color:#2d4a6b;">${apptDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</span></div>`;
+      }
+      appointmentDetailsHtml += `<div style="margin-bottom:4px;"><strong style="color:#1a3a5c;">&#x1F9D1;&#x200D;&#x2695;&#xFE0F; Physician:</strong> <span style="color:#2d4a6b;">${r.doctorName}</span></div>`;
+      if (doctorSpecialty) appointmentDetailsHtml += `<div style="margin-bottom:4px;"><strong style="color:#1a3a5c;">&#x1FA7A; Specialty:</strong> <span style="color:#2d4a6b;">${doctorSpecialty}</span></div>`;
+      if (apptLocation) appointmentDetailsHtml += `<div style="margin-bottom:4px;"><strong style="color:#1a3a5c;">&#x1F4CD; Address:</strong> <span style="color:#2d4a6b;">${apptLocation}</span></div>`;
+      if (calendarLinks) { appointmentDetailsHtml += calendarLinks; calendarLinks = ''; }
+      appointmentDetailsHtml += '</div>';
+      if (!apptDate) appointmentDetailsHtml = `<div style="margin-top:6px;color:#2d4a6b;font-size:13px;">${r.details}</div>`;
+    } else {
+      appointmentDetailsHtml = `<div style="margin-top:6px;color:#2d4a6b;font-size:13px;">${r.details || 'No additional details.'}</div>`;
+    }
+
+    resultsHtml += `<tr><td style="padding:14px 18px;border-bottom:1px solid #e8f0f8;"><strong style="color:#1a3a5c;font-size:15px;">${r.doctorName}</strong><br><span style="color:#7a9aba;font-size:13px;">${r.phone}</span></td><td style="padding:14px 18px;border-bottom:1px solid #e8f0f8;text-align:center;"><span style="color:${statusColor};font-weight:600;font-size:13px;">${statusIcon} ${statusLabel}</span></td><td style="padding:14px 18px;border-bottom:1px solid #e8f0f8;color:#2d4a6b;font-size:13px;">${appointmentDetailsHtml}${r.callId ? '<br><a href="https://doccaller.app/transcript/' + r.callId + '" style="color:#4a90d9;text-decoration:underline;font-size:12px;">View transcript</a>' : ''}${calendarLinks}</td></tr>`;
+  });
+
+  const htmlBody = `<div style="font-family:'Inter',Arial,sans-serif;max-width:640px;margin:0 auto;background:#f0f4f8;padding:30px 20px;"><div style="background:linear-gradient(135deg,#1a3a5c 0%,#254d80 100%);border-radius:12px 12px 0 0;padding:24px 30px;"><h1 style="color:white;margin:0;font-size:22px;font-weight:700;">DocCaller</h1><p style="color:#a8c4e0;margin:6px 0 0;font-size:14px;">Appointment Scheduling Results</p></div><div style="background:white;border-radius:0 0 12px 12px;padding:28px 30px;border:1px solid #d8e8f5;border-top:none;"><p style="color:#2d4a6b;font-size:15px;line-height:1.6;margin:0 0 20px;">Hi${patientName ? ' ' + patientName : ''},<br><br>Here are the results from your DocCaller scheduling session:</p><table style="width:100%;border-collapse:collapse;background:#fafcff;border:1px solid #d8e8f5;border-radius:8px;"><thead><tr style="background:#e8f4fd;"><th style="padding:12px 18px;text-align:left;color:#1a3a5c;font-size:12px;text-transform:uppercase;letter-spacing:0.4px;">Doctor / Clinic</th><th style="padding:12px 18px;text-align:center;color:#1a3a5c;font-size:12px;text-transform:uppercase;letter-spacing:0.4px;">Status</th><th style="padding:12px 18px;text-align:left;color:#1a3a5c;font-size:12px;text-transform:uppercase;letter-spacing:0.4px;">Details</th></tr></thead><tbody>${resultsHtml}</tbody></table><p style="color:#8a9aaa;font-size:12px;margin:24px 0 0;line-height:1.6;">This email was sent by DocCaller. If an appointment was scheduled, please make note of the date, time, and location above.</p></div></div>`;
+
+  await resend.emails.send({
+    from: 'DocCaller <results@doccaller.app>',
+    to: [email],
+    subject: 'Your DocCaller Appointment Results',
+    html: htmlBody
+  });
+}
 
 // Get call status from Bland.ai
 app.get('/api/call-status/:callId', async (req, res) => {

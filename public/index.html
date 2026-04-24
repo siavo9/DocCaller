@@ -1309,6 +1309,55 @@
       </button>
     </div>
 
+    <!-- Preferred Call Time -->
+    <div class="section-label fade-in">Step 3 — Call Timing (Optional)</div>
+    <div class="card fade-in">
+      <h2 class="card-title">
+        <div class="icon">&#x1F552;</div>
+        Preferred Call Time
+      </h2>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;">
+        By default, calls are made at the next available business hours window (9 AM–12 PM or 1 PM–4 PM, Mon–Fri).
+        You can optionally choose a specific date and time for the call to be placed.
+      </p>
+      <div style="margin-bottom:12px;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--text-primary);margin-bottom:8px;">
+          <input type="radio" name="call-timing" value="default" checked onchange="toggleCallTime()">
+          <span><strong>Next available window</strong> — calls go out as soon as business hours allow</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--text-primary);">
+          <input type="radio" name="call-timing" value="specific" onchange="toggleCallTime()">
+          <span><strong>Specific date & time</strong> — choose exactly when the call is placed</span>
+        </label>
+      </div>
+      <div id="specific-time-fields" style="display:none;">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="call-date">Call Date</label>
+            <input type="date" id="call-date">
+          </div>
+          <div class="form-group">
+            <label for="call-time">Call Time</label>
+            <input type="time" id="call-time" value="09:00">
+          </div>
+          <div class="form-group full-width">
+            <label for="call-timezone">Timezone</label>
+            <select id="call-timezone">
+              <option value="America/New_York">Eastern Time (ET)</option>
+              <option value="America/Chicago">Central Time (CT)</option>
+              <option value="America/Denver">Mountain Time (MT)</option>
+              <option value="America/Los_Angeles">Pacific Time (PT)</option>
+              <option value="America/Anchorage">Alaska Time (AKT)</option>
+              <option value="Pacific/Honolulu">Hawaii Time (HT)</option>
+            </select>
+          </div>
+        </div>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">
+          Please select a time during business hours (9 AM–12 PM or 1 PM–4 PM, Mon–Fri). Calls scheduled outside these windows will be moved to the nearest valid time.
+        </p>
+      </div>
+    </div>
+
     <!-- Consent -->
     <div class="consent-box fade-in">
       <input type="checkbox" id="consent-check">
@@ -1590,6 +1639,46 @@
     renderAppointments();
   }
 
+  function toggleCallTime() {
+    const isSpecific = document.querySelector('input[name="call-timing"][value="specific"]').checked;
+    document.getElementById('specific-time-fields').style.display = isSpecific ? 'block' : 'none';
+    if (isSpecific && !document.getElementById('call-date').value) {
+      // Default to tomorrow
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      document.getElementById('call-date').value = tomorrow.toISOString().split('T')[0];
+    }
+  }
+
+  function getRequestedCallTime() {
+    const isSpecific = document.querySelector('input[name="call-timing"][value="specific"]').checked;
+    if (!isSpecific) return null;
+
+    const date = document.getElementById('call-date').value;
+    const time = document.getElementById('call-time').value;
+    const timezone = document.getElementById('call-timezone').value;
+
+    if (!date || !time) return null;
+
+    // Build an ISO string representing the local time in the chosen timezone
+    // We need to convert local time to UTC
+    const localDateStr = date + 'T' + time + ':00';
+    const localDate = new Date(localDateStr);
+
+    // Get the UTC offset for the target timezone
+    const utcDate = new Date(localDate.toLocaleString('en-US', { timeZone: 'UTC' }));
+    const tzDate = new Date(localDate.toLocaleString('en-US', { timeZone: timezone }));
+    const offset = utcDate.getTime() - tzDate.getTime();
+    const utcTime = new Date(localDate.getTime() + offset);
+
+    return {
+      dateTime: utcTime.toISOString(),
+      timezone: timezone,
+      displayDate: date,
+      displayTime: time
+    };
+  }
+
   function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str || '';
@@ -1653,7 +1742,8 @@
         mrn: document.getElementById('p-mrn').value.trim(),
         email: document.getElementById('p-email').value.trim()
       },
-      appointments: appointments.filter(a => a.name.trim()).map(a => ({...a, timeline: a.timeline === 'custom' ? (a.timelineCustom || 'custom') : (a.timeline || '')}))
+      appointments: appointments.filter(a => a.name.trim()).map(a => ({...a, timeline: a.timeline === 'custom' ? (a.timelineCustom || 'custom') : (a.timeline || '')})),
+      requestedCallTime: getRequestedCallTime()
     };
 
     if (promoApplied) {
@@ -1715,114 +1805,68 @@
         document.getElementById('form-section').style.display = 'none';
         document.getElementById('status-section').style.display = 'block';
 
-        // Check business hours and start calls
+        // Submit to queue
         checkBusinessHoursAndStart(formData);
       }
+      return;
+    }
+
+    // Check for an active session (user returning to page)
+    const activeSession = localStorage.getItem('doccaller_session');
+    if (activeSession) {
+      // Verify session is still active
+      fetch('/api/session-status/' + activeSession)
+        .then(r => r.json())
+        .then(data => {
+          if (data.status === 'completed' || data.status === 'failed') {
+            localStorage.removeItem('doccaller_session');
+            return;
+          }
+          // Resume showing status
+          document.getElementById('form-section').style.display = 'none';
+          document.getElementById('status-section').style.display = 'block';
+
+          const title = document.getElementById('banner-title');
+          const sub = document.getElementById('banner-sub');
+
+          if (data.status === 'pending') {
+            document.getElementById('pulse-dot').style.background = '#f59e0b';
+            title.textContent = 'Scheduled — Waiting for Call Window';
+            sub.innerHTML = 'Your calls are queued and will be placed at <strong>' + escapeHtml(data.scheduledForDisplay || '') + '</strong>.<br>You can close this page — you\'ll receive an email with results.';
+          } else if (data.status === 'calling') {
+            document.getElementById('pulse-dot').style.background = '#10b981';
+            title.textContent = 'Calls In Progress';
+            sub.textContent = 'Our AI agent is calling each office. This may take a few minutes per call.';
+          }
+
+          // Render call items from session data
+          if (data.calls) {
+            data.calls.forEach(function(call, i) {
+              if (call.status === 'in_progress') {
+                renderCallItem(i, call.doctorName, call.phone || '', 'calling');
+              } else {
+                renderCallItem(i, call.doctorName, call.phone || '', 'calling');
+                const statusMap = { 'complete': 'complete', 'voicemail': 'voicemail', 'not_scheduled': 'failed', 'failed': 'failed' };
+                updateCallItem(i, statusMap[call.status] || 'calling', call.details || '');
+              }
+            });
+          }
+
+          pollSessionStatus(activeSession, []);
+        })
+        .catch(() => {
+          localStorage.removeItem('doccaller_session');
+        });
     }
   });
 
-  // --- BUSINESS HOURS CHECK & SCHEDULING ------------------
-  let scheduledTimer = null;
+  // --- SUBMIT TO QUEUE & POLL SESSION STATUS ---------------
+  let sessionPollTimer = null;
+  let currentSessionId = null;
 
   async function checkBusinessHoursAndStart(formData) {
     try {
-      // Extract patient state from address (look for 2-letter state code)
-      const addrParts = (formData.patient.address || '').split(/[\s,]+/);
-      let patientState = '';
-      const stateCodes = ['AL','AK','AZ','AR','CA','CO','CT','DE','DC','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'];
-      for (const p of addrParts) {
-        if (stateCodes.includes(p.toUpperCase())) { patientState = p.toUpperCase(); break; }
-      }
-
-      const res = await fetch('/api/next-window', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          appointments: formData.appointments.map(a => ({ name: a.name, state: a.state || '' })),
-          patientState
-        })
-      });
-      const windowData = await res.json();
-
-      if (windowData.inWindow) {
-        // We're in business hours — start calls immediately
-        formData.appointments.forEach(function(appt, i) {
-          renderCallItem(i, appt.name, '', 'calling');
-        });
-        startCalls(formData);
-      } else {
-        // Outside business hours — show countdown
-        showScheduledWaiting(windowData, formData);
-      }
-    } catch (err) {
-      // If check fails, try calling anyway
-      formData.appointments.forEach(function(appt, i) {
-        renderCallItem(i, appt.name, '', 'calling');
-      });
-      startCalls(formData);
-    }
-  }
-
-  function showScheduledWaiting(windowData, formData) {
-    const banner = document.getElementById('status-banner');
-    const title = document.getElementById('banner-title');
-    const sub = document.getElementById('banner-sub');
-    const dot = document.getElementById('pulse-dot');
-    const list = document.getElementById('call-list');
-
-    dot.style.background = '#f59e0b';
-    title.textContent = 'Scheduled — Waiting for Business Hours';
-    sub.innerHTML = 'Our AI only calls during office hours: <strong>9 AM – 12 PM</strong> and <strong>1 PM – 4 PM</strong>, Mon–Fri.<br>Calls will begin at <strong>' + (windowData.nextWindowLocal || 'the next available window') + '</strong> (' + (windowData.timezone || 'Eastern') + ').';
-
-    // Show appointment list as "queued"
-    list.innerHTML = '';
-    formData.appointments.forEach(function(appt, i) {
-      const li = document.createElement('li');
-      li.className = 'call-status-item';
-      li.id = 'call-item-' + i;
-      li.innerHTML = '<div><div class="call-name">' + escapeHtml(appt.name) + '</div></div><div><span class="status-badge" style="background:rgba(245,158,11,0.15);color:#b45309;">Queued</span></div>';
-      list.appendChild(li);
-    });
-
-    // Add countdown
-    const countdownEl = document.createElement('div');
-    countdownEl.id = 'biz-countdown';
-    countdownEl.style.cssText = 'text-align:center;padding:16px;font-size:18px;font-weight:600;color:var(--text-primary);';
-    list.parentElement.insertBefore(countdownEl, list);
-
-    function updateCountdown() {
-      const now = Date.now();
-      const target = new Date(windowData.nextWindowUTC).getTime();
-      const diff = target - now;
-      if (diff <= 0) {
-        countdownEl.textContent = 'Starting calls now...';
-        clearInterval(scheduledTimer);
-        dot.style.background = '#10b981';
-        title.textContent = 'Calls In Progress';
-        sub.textContent = 'Our AI agent is calling each office. This may take a few minutes per call.';
-        countdownEl.remove();
-        formData.appointments.forEach(function(appt, i) {
-          renderCallItem(i, appt.name, '', 'calling');
-        });
-        startCalls(formData);
-        return;
-      }
-      const hours = Math.floor(diff / 3600000);
-      const mins = Math.floor((diff % 3600000) / 60000);
-      const secs = Math.floor((diff % 60000) / 1000);
-      let text = 'Calls begin in ';
-      if (hours > 0) text += hours + 'h ';
-      text += mins + 'm ' + secs + 's';
-      countdownEl.textContent = text;
-    }
-
-    updateCountdown();
-    scheduledTimer = setInterval(updateCountdown, 1000);
-  }
-
-  // --- START CALLS ---------------------------------------
-  async function startCalls(formData) {
-    try {
+      // Submit to server — server handles scheduling logic
       const res = await fetch('/api/schedule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1832,27 +1876,189 @@
       const data = await res.json();
 
       if (!data.success) {
-        showStatusError(data.error || 'Failed to start calls. Please contact support.');
+        showStatusError(data.error || 'Failed to queue appointments. Please contact support.');
         return;
       }
 
-      activeCalls = data.calls;
+      currentSessionId = data.sessionId;
 
-      // Update items with call IDs & begin polling
-      data.calls.forEach((call, i) => {
-        if (call.callId) {
-          pollCall(call.callId, i);
-        } else {
-          // Call failed to initiate
-          updateCallItem(i, 'failed', call.error || 'Could not connect');
-          completedCount++;
-          checkAllDone();
-        }
+      // Save session ID so user can return to this page
+      try { localStorage.setItem('doccaller_session', data.sessionId); } catch(e) {}
+
+      // Show the status view
+      const title = document.getElementById('banner-title');
+      const sub = document.getElementById('banner-sub');
+      const dot = document.getElementById('pulse-dot');
+      const list = document.getElementById('call-list');
+
+      // Determine if calls are happening now or later
+      const scheduledTime = new Date(data.scheduledFor);
+      const now = new Date();
+      const isQueued = scheduledTime.getTime() > now.getTime() + 60000; // more than 1 min away
+
+      if (isQueued) {
+        dot.style.background = '#f59e0b';
+        title.textContent = 'Scheduled — Waiting for Call Window';
+        sub.innerHTML = 'Your calls are queued and will be placed at <strong>' + escapeHtml(data.scheduledForDisplay) + '</strong>.<br>You can close this page — you\'ll receive an email with the results once all calls are complete.';
+      } else {
+        dot.style.background = '#10b981';
+        title.textContent = 'Calls Queued';
+        sub.innerHTML = 'Your calls will begin shortly. Our AI agent will call each office within the next few minutes.<br>You can close this page — you\'ll receive an email with the results.';
+      }
+
+      // Show appointment list
+      list.innerHTML = '';
+      formData.appointments.forEach(function(appt, i) {
+        const li = document.createElement('li');
+        li.className = 'call-status-item';
+        li.id = 'call-item-' + i;
+        const badgeStyle = isQueued
+          ? 'background:rgba(245,158,11,0.15);color:#b45309;'
+          : 'background:rgba(16,185,129,0.15);color:#047857;';
+        const badgeText = isQueued ? 'Queued' : 'Pending';
+        li.innerHTML = '<div><div class="call-name">' + escapeHtml(appt.name) + '</div></div><div><span class="status-badge" style="' + badgeStyle + '">' + badgeText + '</span></div>';
+        list.appendChild(li);
       });
+
+      // Add countdown if queued for later
+      if (isQueued) {
+        const countdownEl = document.createElement('div');
+        countdownEl.id = 'biz-countdown';
+        countdownEl.style.cssText = 'text-align:center;padding:16px;font-size:18px;font-weight:600;color:var(--text-primary);';
+        list.parentElement.insertBefore(countdownEl, list);
+
+        function updateCountdown() {
+          const diff = scheduledTime.getTime() - Date.now();
+          if (diff <= 0) {
+            countdownEl.textContent = 'Calls starting soon...';
+            return;
+          }
+          const hours = Math.floor(diff / 3600000);
+          const mins = Math.floor((diff % 3600000) / 60000);
+          const secs = Math.floor((diff % 60000) / 1000);
+          let text = 'Calls begin in ';
+          if (hours > 0) text += hours + 'h ';
+          text += mins + 'm ' + secs + 's';
+          countdownEl.textContent = text;
+        }
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+      }
+
+      // Start polling session status
+      pollSessionStatus(data.sessionId, formData.appointments);
 
     } catch (err) {
       showStatusError('Network error. Please check your connection and try again.');
     }
+  }
+
+  function pollSessionStatus(sessionId, appointmentsList) {
+    let prevStatus = '';
+
+    const check = async () => {
+      try {
+        const res = await fetch('/api/session-status/' + sessionId);
+        const data = await res.json();
+
+        if (data.error) return;
+
+        // Update UI based on session status
+        const title = document.getElementById('banner-title');
+        const sub = document.getElementById('banner-sub');
+        const dot = document.getElementById('pulse-dot');
+        const countdown = document.getElementById('biz-countdown');
+
+        if (data.status === 'calling' && prevStatus !== 'calling') {
+          dot.style.background = '#10b981';
+          title.textContent = 'Calls In Progress';
+          sub.textContent = 'Our AI agent is calling each office. This may take a few minutes per call.';
+          if (countdown) countdown.remove();
+
+          // Update individual call items
+          if (data.calls) {
+            data.calls.forEach(function(call, i) {
+              const statusMap = {
+                'in_progress': 'calling',
+                'complete': 'complete',
+                'voicemail': 'voicemail',
+                'not_scheduled': 'failed',
+                'failed': 'failed'
+              };
+              const uiStatus = statusMap[call.status] || 'calling';
+              if (uiStatus === 'calling') {
+                renderCallItem(i, call.doctorName, call.phone || '', 'calling');
+              } else {
+                updateCallItem(i, uiStatus, call.details || call.error || '');
+              }
+            });
+          }
+        }
+
+        if (data.status === 'calling' && data.calls) {
+          // Update progress on individual calls
+          data.calls.forEach(function(call, i) {
+            if (call.status !== 'in_progress') {
+              const statusMap = { 'complete': 'complete', 'voicemail': 'voicemail', 'not_scheduled': 'failed', 'failed': 'failed' };
+              updateCallItem(i, statusMap[call.status] || 'failed', call.details || call.error || '');
+            }
+          });
+        }
+
+        if (data.status === 'completed') {
+          clearInterval(sessionPollTimer);
+          dot.style.background = '#10b981';
+          title.textContent = 'All Calls Completed';
+          sub.textContent = 'Results have been emailed to ' + (patientEmail || 'your email address') + '.';
+          if (countdown) countdown.remove();
+
+          // Show final results
+          if (data.calls) {
+            // Render results section
+            const resultsSection = document.getElementById('results-section');
+            if (resultsSection) {
+              resultsSection.style.display = 'block';
+              let resultsHtml = '<div class="results-card"><h3 style="font-size:16px;font-weight:600;margin-bottom:16px;color:var(--text-primary);">Appointment Results</h3>';
+              data.calls.forEach(function(call) {
+                const statusMap = { 'complete': 'Scheduled', 'voicemail': 'Voicemail Left', 'not_scheduled': 'Could Not Schedule', 'failed': 'Failed' };
+                const colorMap = { 'complete': '#047857', 'voicemail': '#6b21a8', 'not_scheduled': '#b45309', 'failed': '#dc2626' };
+                const iconMap = { 'complete': '&#x2705;', 'voicemail': '&#x1F4EC;', 'not_scheduled': '&#x26A0;&#xFE0F;', 'failed': '&#x274C;' };
+                resultsHtml += '<div style="padding:12px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:10px;">';
+                resultsHtml += '<div style="display:flex;justify-content:space-between;align-items:center;">';
+                resultsHtml += '<strong>' + escapeHtml(call.doctorName) + '</strong>';
+                resultsHtml += '<span style="color:' + (colorMap[call.status] || '#666') + ';font-weight:600;font-size:13px;">' + (iconMap[call.status] || '') + ' ' + (statusMap[call.status] || call.status) + '</span>';
+                resultsHtml += '</div>';
+                if (call.details) resultsHtml += '<p style="margin-top:8px;font-size:13px;color:var(--text-secondary);">' + escapeHtml(call.details) + '</p>';
+                if (call.callId) resultsHtml += '<a href="/transcript/' + call.callId + '" target="_blank" style="font-size:12px;color:var(--blue-500);text-decoration:underline;">View transcript</a>';
+                resultsHtml += '</div>';
+              });
+              resultsHtml += '</div>';
+              resultsSection.innerHTML = resultsHtml;
+            }
+
+            // Update individual call items
+            data.calls.forEach(function(call, i) {
+              const statusMap = { 'complete': 'complete', 'voicemail': 'voicemail', 'not_scheduled': 'failed', 'failed': 'failed' };
+              updateCallItem(i, statusMap[call.status] || 'failed', call.details || call.error || '');
+            });
+          }
+          return;
+        }
+
+        if (data.status === 'failed') {
+          clearInterval(sessionPollTimer);
+          showStatusError('Something went wrong processing your calls. Please contact support.');
+          return;
+        }
+
+        prevStatus = data.status;
+      } catch (err) {
+        // Network error — keep polling
+      }
+    };
+
+    check();
+    sessionPollTimer = setInterval(check, 15000); // Poll every 15 seconds
   }
 
   // --- POLL CALL STATUS ---------------------------------
