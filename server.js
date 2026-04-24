@@ -14,12 +14,7 @@ const BLAND_API_KEY = process.env.BLAND_API_KEY;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const resend = new Resend(RESEND_API_KEY);
 
-// Twilio SMS config
-const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
-const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
-const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER;
-const TWILIO_MESSAGING_SERVICE_SID = process.env.TWILIO_MESSAGING_SERVICE_SID;
-const twilio = (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN) ? require('twilio')(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN) : null;
+// Twilio SMS removed — results delivered via email only
 
 // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ HELPERS Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 
@@ -333,7 +328,7 @@ app.post('/api/send-results', async (req, res) => {
       return res.status(500).json({ success: false, error: 'Email service not configured' });
     }
 
-    const { email, patientName, patientPhone, results } = req.body;
+    const { email, patientName, results } = req.body;
 
     if (!email || !results || !Array.isArray(results)) {
       return res.status(400).json({ success: false, error: 'Missing required fields' });
@@ -458,53 +453,7 @@ app.post('/api/send-results', async (req, res) => {
       html: htmlBody
     });
 
-    // Send SMS if Twilio is configured and patient phone provided
-    let smsSent = false;
-    const hasSmsConfig = !!(TWILIO_MESSAGING_SERVICE_SID || TWILIO_PHONE_NUMBER);
-    console.log('SMS Debug: twilio client exists:', !!twilio, '| messagingServiceSid:', !!TWILIO_MESSAGING_SERVICE_SID, '| phoneNumber:', !!TWILIO_PHONE_NUMBER, '| patientPhone:', patientPhone || '(empty)');
-    if (twilio && hasSmsConfig && patientPhone) {
-      try {
-        // Build a concise text message with results
-        let smsBody = `DocCaller Results for ${patientName || 'your appointments'}:\n\n`;
-        results.forEach((r) => {
-          const statusLabel = r.status === 'complete' ? 'Scheduled' : r.status === 'voicemail' ? 'Voicemail Left' : 'Could Not Schedule';
-          const statusEmoji = r.status === 'complete' ? '✅' : r.status === 'voicemail' ? '📬' : '❌';
-          smsBody += `${statusEmoji} ${r.doctorName}: ${statusLabel}\n`;
-          if (r.status === 'complete' && r.details) {
-            // Extract just the appointment info (date/time/location)
-            const apptInfo = parseAppointmentInfo(r.details);
-            if (apptInfo) {
-              if (apptInfo.date) smsBody += `   📅 ${apptInfo.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} at ${apptInfo.date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}\n`;
-              if (apptInfo.location) smsBody += `   📍 ${apptInfo.location}\n`;
-            }
-          }
-          smsBody += '\n';
-        });
-        smsBody += 'Check your email for full details & calendar links.\n- DocCaller';
-
-        // Normalize phone number to E.164 format
-        let toPhone = patientPhone.replace(/[^0-9+]/g, '');
-        if (!toPhone.startsWith('+')) {
-          toPhone = '+1' + toPhone; // Default to US
-        }
-
-        const smsParams = { body: smsBody, to: toPhone };
-        if (TWILIO_MESSAGING_SERVICE_SID) {
-          smsParams.messagingServiceSid = TWILIO_MESSAGING_SERVICE_SID;
-        } else {
-          smsParams.from = TWILIO_PHONE_NUMBER;
-        }
-        console.log('SMS Debug: Sending to', toPhone, 'via', TWILIO_MESSAGING_SERVICE_SID ? 'MessagingService' : TWILIO_PHONE_NUMBER);
-        const msg = await twilio.messages.create(smsParams);
-        console.log('SMS Debug: Message sent, SID:', msg.sid);
-        smsSent = true;
-      } catch (smsError) {
-        console.error('SMS send error:', smsError.message || smsError);
-        // Don't fail the whole request if SMS fails — email was already sent
-      }
-    }
-
-    res.json({ success: true, smsSent });
+    res.json({ success: true });
 
   } catch (error) {
     console.error('Email send error:', error);

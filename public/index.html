@@ -1262,6 +1262,7 @@
         <div class="form-group">
           <label for="p-phone">Phone Number</label>
           <input type="tel" id="p-phone" placeholder="(555) 123-4567">
+          <span style="font-size:11px;color:var(--text-muted);margin-top:3px;">Provided to the office in case they need to follow up with the patient.</span>
         </div>
         <div class="form-group">
           <label for="p-insurance">Insurance Provider</label>
@@ -1439,7 +1440,7 @@
   let promoApplied = false;
   let patientEmail = '';
   let patientName = '';
-  let patientPhone = '';
+  // patientPhone removed — results delivered via email only
 
   // --- RENDER APPOINTMENT ENTRIES -------------------------
   function renderAppointments() {
@@ -1584,11 +1585,10 @@
       // Bypass Stripe - go directly to call flow
       patientEmail = formData.patient.email;
       patientName = formData.patient.name;
-      patientPhone = formData.patient.phone;
       document.getElementById('form-section').style.display = 'none';
       document.getElementById('status-section').style.display = 'block';
       formData.appointments.forEach(function(appt, i) {
-        renderCallItem(i, appt.name, appt.phone, 'calling');
+        renderCallItem(i, appt.name, '', 'calling');
       });
       startCalls(formData);
     } else {
@@ -1645,7 +1645,7 @@
 
         // Render initial call items
         formData.appointments.forEach((appt, i) => {
-          renderCallItem(i, appt.name, appt.phone, 'calling');
+          renderCallItem(i, appt.name, '', 'calling');
         });
 
         // Fire the calls
@@ -1906,18 +1906,13 @@
           body: JSON.stringify({
             email: patientEmail,
             patientName: patientName,
-            patientPhone: patientPhone,
             results: emailResults
           })
         }).then(r => r.json()).then(data => {
           if (data.success) {
-            let noteText = 'Results have been emailed to ' + patientEmail;
-            if (data.smsSent) {
-              noteText += ' and texted to ' + patientPhone;
-            }
             const emailNote = document.createElement('p');
             emailNote.style.cssText = 'text-align:center;color:#047857;font-size:14px;margin-top:16px;font-weight:600;';
-            emailNote.textContent = noteText;
+            emailNote.textContent = 'Results have been emailed to ' + patientEmail;
             document.querySelector('.results-card').appendChild(emailNote);
           }
         }).catch(() => {});
