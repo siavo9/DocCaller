@@ -14,7 +14,114 @@ const BLAND_API_KEY = process.env.BLAND_API_KEY;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const resend = new Resend(RESEND_API_KEY);
 
-// Twilio SMS removed — results delivered via email only
+// --- TIMEZONE & BUSINESS HOURS ---
+
+const STATE_TIMEZONES = {
+  'AL':'America/Chicago','AK':'America/Anchorage','AZ':'America/Phoenix','AR':'America/Chicago',
+  'CA':'America/Los_Angeles','CO':'America/Denver','CT':'America/New_York','DE':'America/New_York',
+  'FL':'America/New_York','GA':'America/New_York','HI':'Pacific/Honolulu','ID':'America/Boise',
+  'IL':'America/Chicago','IN':'America/Indiana/Indianapolis','IA':'America/Chicago','KS':'America/Chicago',
+  'KY':'America/New_York','LA':'America/Chicago','ME':'America/New_York','MD':'America/New_York',
+  'MA':'America/New_York','MI':'America/Detroit','MN':'America/Chicago','MS':'America/Chicago',
+  'MO':'America/Chicago','MT':'America/Denver','NE':'America/Chicago','NV':'America/Los_Angeles',
+  'NH':'America/New_York','NJ':'America/New_York','NM':'America/Denver','NY':'America/New_York',
+  'NC':'America/New_York','ND':'America/Chicago','OH':'America/New_York','OK':'America/Chicago',
+  'OR':'America/Los_Angeles','PA':'America/New_York','RI':'America/New_York','SC':'America/New_York',
+  'SD':'America/Chicago','TN':'America/Chicago','TX':'America/Chicago','UT':'America/Denver',
+  'VT':'America/New_York','VA':'America/New_York','WA':'America/Los_Angeles','WV':'America/New_York',
+  'WI':'America/Chicago','WY':'America/Denver','DC':'America/New_York',
+  'PR':'America/Puerto_Rico','GU':'Pacific/Guam','VI':'America/Virgin','AS':'Pacific/Pago_Pago'
+};
+
+const DEFAULT_TIMEZONE = 'America/New_York';
+
+// Business hours windows (24h format): 9-12 and 13-16
+const BIZ_WINDOWS = [{ start: 9, end: 12 }, { start: 13, end: 16 }];
+
+function getTimezone(doctorState, patientState) {
+  if (doctorState && STATE_TIMEZONES[doctorState.toUpperCase()]) {
+    return STATE_TIMEZONES[doctorState.toUpperCase()];
+  }
+  if (patientState && STATE_TIMEZONES[patientState.toUpperCase()]) {
+    return STATE_TIMEZONES[patientState.toUpperCase()];
+  }
+  return DEFAULT_TIMEZONE;
+}
+
+function getNowInTimezone(tz) {
+  const now = new Date();
+  const str = now.toLocaleString('en-US', { timeZone: tz });
+  return new Date(str);
+}
+
+function isBusinessHours(tz) {
+  const local = getNowInTimezone(tz);
+  const day = local.getDay(); // 0=Sun, 6=Sat
+  if (day === 0 || day === 6) return false;
+  const hour = local.getHours();
+  const min = local.getMinutes();
+  const t = hour + min / 60;
+  return BIZ_WINDOWS.some(w => t >= w.start && t < w.end);
+}
+
+function getNextBusinessWindow(tz) {
+  const now = new Date();
+  let candidate = new Date(now);
+
+  // Search up to 7 days ahead
+  for (let d = 0; d < 7; d++) {
+    const check = new Date(candidate.getTime() + d * 86400000);
+    const localStr = check.toLocaleString('en-US', { timeZone: tz });
+    const local = new Date(localStr);
+    const day = local.getDay();
+    if (day === 0 || day === 6) continue; // skip weekends
+
+    for (const w of BIZ_WINDOWS) {
+      // Build a target time: today at w.start:00 in the target timezone
+      const target = new Date(local);
+      target.setHours(w.start, 0, 0, 0);
+
+      if (d === 0) {
+        // Same day — only if the window hasn't passed yet
+        const currentHour = local.getHours() + local.getMinutes() / 60;
+        if (currentHour >= w.end) continue; // window already passed
+        if (currentHour >= w.start) {
+          // We're inside this window right now
+          return { inWindow: true, nextWindowUTC: now.toISOString(), waitMs: 0, timezone: tz };
+        }
+      }
+
+      // Calculate UTC equivalent of target time
+      // Offset = local time - UTC time
+      const offsetMs = new Date(check.toLocaleString('en-US', { timeZone: tz })).getTime() - check.getTime();
+      const targetUTC = new Date(check.getTime() + (d * 86400000) + (w.start * 3600000) - offsetMs - (d * 86400000));
+
+      // More reliable: use the offset between now-local and now-utc
+      const nowLocal = new Date(now.toLocaleString('en-US', { timeZone: tz }));
+      const offsetFromNow = nowLocal.getTime() - now.getTime();
+
+      // Target local time for this window
+      const targetLocalMs = new Date(nowLocal);
+      targetLocalMs.setDate(targetLocalMs.getDate() + d);
+      targetLocalMs.setHours(w.start, 0, 0, 0);
+
+      const targetUTCMs = targetLocalMs.getTime() - offsetFromNow;
+      const waitMs = targetUTCMs - now.getTime();
+
+      if (waitMs > 0) {
+        return {
+          inWindow: false,
+          nextWindowUTC: new Date(targetUTCMs).toISOString(),
+          nextWindowLocal: targetLocalMs.toLocaleString('en-US', { timeZone: tz, weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }),
+          waitMs,
+          timezone: tz
+        };
+      }
+    }
+  }
+  // Fallback — shouldn't happen
+  return { inWindow: true, nextWindowUTC: now.toISOString(), waitMs: 0, timezone: tz };
+}
 
 // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ HELPERS Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 
@@ -189,6 +296,32 @@ This summary line is essential for our system to generate calendar links for the
 
 // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ ROUTES Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 
+// Check next available calling window for given appointments
+app.post('/api/next-window', (req, res) => {
+  const { appointments, patientState } = req.body;
+  if (!appointments || !Array.isArray(appointments)) {
+    return res.status(400).json({ error: 'Missing appointments' });
+  }
+  // For each appointment, determine its timezone and next window
+  const windows = appointments.map(appt => {
+    const tz = getTimezone(appt.state, patientState);
+    const window = getNextBusinessWindow(tz);
+    return { doctorName: appt.name, ...window };
+  });
+  // The call session waits for the LATEST window (all calls go out together)
+  const latestWait = Math.max(...windows.map(w => w.waitMs));
+  const inWindow = latestWait === 0;
+  const latest = windows.find(w => w.waitMs === latestWait) || windows[0];
+  res.json({
+    inWindow,
+    nextWindowUTC: latest.nextWindowUTC,
+    nextWindowLocal: latest.nextWindowLocal || null,
+    waitMs: latestWait,
+    timezone: latest.timezone,
+    perAppointment: windows
+  });
+});
+
 // Trigger Bland.ai calls for all appointments
 app.post('/api/schedule', async (req, res) => {
   try {
@@ -204,6 +337,26 @@ app.post('/api/schedule', async (req, res) => {
 
     if (!appointments || appointments.length === 0) {
       return res.status(400).json({ success: false, error: 'No appointments provided' });
+    }
+
+    // Server-side business hours guard
+    // Extract patient state from address
+    const addrParts = (patient.address || '').split(/[\s,]+/);
+    let patientStateCode = '';
+    for (const p of addrParts) {
+      if (STATE_TIMEZONES[p.toUpperCase()]) { patientStateCode = p.toUpperCase(); break; }
+    }
+    // Check if ANY appointment is outside business hours
+    for (const appt of appointments) {
+      const tz = getTimezone(appt.state, patientStateCode);
+      if (!isBusinessHours(tz)) {
+        const nextWin = getNextBusinessWindow(tz);
+        return res.status(400).json({
+          success: false,
+          error: 'Outside business hours. Calls can only be made 9 AM–12 PM and 1 PM–4 PM, Mon–Fri.',
+          nextWindow: nextWin
+        });
+      }
     }
 
     const calls = [];
